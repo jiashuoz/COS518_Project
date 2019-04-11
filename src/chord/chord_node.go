@@ -2,6 +2,7 @@ package chord
 
 import (
 	"crypto/sha1"
+	"encoding/hex"
 	"math/big"
 )
 
@@ -62,6 +63,28 @@ func (node *Node) Predecessor() *NodeInfo {
 	return node.predecessor
 }
 
+func (node *Node) String() string {
+	str := "id: " + hex.EncodeToString(node.id) + string("\n")
+	str += "fingerTable: \n"
+	for _, entry := range node.fingerTable {
+		if entry != nil {
+			str += "   " + entry.string()
+		}
+	}
+	if node.successor != nil {
+		str += "successor: " + node.successor.string()
+	} else {
+		str += "successor: nil"
+	}
+
+	if node.predecessor != nil {
+		str += "predecessor: " + node.predecessor.string()
+	} else {
+		str += "predecessor: nil"
+	}
+	return str
+}
+
 // Returns the hash value in []byte based an ipAddr
 // Takes in a string, use sha1 to hash it to generate 160 bit hash value
 // mod by 2^160 so that the value's range is [0, 2^m - 1]
@@ -77,4 +100,19 @@ func hash(ipAddr string) []byte {
 	idBigInt.Mod(idBigInt, maxVal)                  // mod id to make it to be [0, 2^m - 1]
 
 	return idBigInt.Bytes()
+}
+
+func (fingerEntry *FingerEntry) string() string {
+	str := "finger entry: "
+	str += string(hex.EncodeToString(fingerEntry.start)) + " "
+	str += string(hex.EncodeToString(fingerEntry.succ.id))
+	str += string('\n')
+	return str
+}
+
+func (nodeInfo *NodeInfo) string() string {
+	str := "NodeInfo: "
+	str += hex.EncodeToString(nodeInfo.id) + " "
+	str += nodeInfo.ipAddr + "\n"
+	return str
 }
