@@ -6,27 +6,27 @@ import (
 	"math/big"
 )
 
-// A primitive node
+// Node is a primitive structure that contains information about a chord
 type Node struct {
 	id          []byte         // use sha1 to generate 160 bit id (20 bytes)
-	fingerTable []*FingerEntry // a table of FingerEntry
+	fingerTable []*FingerEntry // a table of FingerEntry pointer
 	successor   *NodeInfo      // next node on the identifier circle
 	predecessor *NodeInfo      // previous node on the identifier circle
 }
 
-// A NodeInfo contains some basic information about a node
+// NodeInfo contains some basic information about a node
 type NodeInfo struct {
 	id     []byte // id of the node
 	ipAddr string // ip address of the node
 }
 
-// Each entry in fingerTable
+// FingerEntry in fingerTable
 type FingerEntry struct {
 	start []byte    // start == (n + 2^k-1) mod 2^m, 1 <= k <= m
 	succ  *NodeInfo // the next node >= fingerEntry.
 }
 
-// Create a new Node based on ip address
+// MakeNode creates a new Node based on ip address and returns a pointer to it
 func MakeNode(ipAddr string) *Node {
 
 	n := Node{}
@@ -38,31 +38,32 @@ func MakeNode(ipAddr string) *Node {
 	return &n
 }
 
-// Create a new NodeInfo give id and ipAddr
+// MakeNodeInfo creates a new NodeInfo give id and ipAddr and returns a pointer to it
 func MakeNodeInfo(id []byte, ipAddr string) *NodeInfo {
 	return &NodeInfo{id, ipAddr}
 }
 
-// Return node's ID
+// ID returns node's ID in []byte
 func (node *Node) ID() []byte {
 	return node.id
 }
 
-// Return the finger table
+// FingerTable returns a pointer to an array of table entry pointers
 func (node *Node) FingerTable() []*FingerEntry {
 	return node.fingerTable
 }
 
-// Return the info about successor
+// Successor returns a pointer to a NodeInfo struct about successor
 func (node *Node) Successor() *NodeInfo {
 	return node.successor
 }
 
-// Return the info about predecessor
+// Predecessor returns a pointer to a NodeInfo struct about predecessor
 func (node *Node) Predecessor() *NodeInfo {
 	return node.predecessor
 }
 
+// String returns the string representation of a Node
 func (node *Node) String() string {
 	str := "id: " + hex.EncodeToString(node.id) + string("\n")
 	str += "fingerTable: \n"
