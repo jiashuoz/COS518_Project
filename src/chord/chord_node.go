@@ -32,7 +32,7 @@ func MakeNode(ipAddr string) *Node {
 
 	n := Node{}
 	n.id = hash(ipAddr) // id
-	n.fingerTable = make([]*FingerEntry, 160)
+	n.fingerTable = make([]*FingerEntry, numBits)
 	n.successor = MakeNodeInfo(n.id, ipAddr) // initially, successor is itself
 	n.predecessor = nil                      // initially, no predecessor
 
@@ -110,8 +110,8 @@ func hash(ipAddr string) []byte {
 	idBigInt.SetBytes(h.Sum(nil)) // Sum() returns []byte, convert it into BigInt
 
 	maxVal := big.NewInt(0)
-	maxVal.Exp(big.NewInt(2), big.NewInt(160), nil) // calculate 2^m
-	idBigInt.Mod(idBigInt, maxVal)                  // mod id to make it to be [0, 2^m - 1]
+	maxVal.Exp(big.NewInt(2), big.NewInt(numBits), nil) // calculate 2^m
+	idBigInt.Mod(idBigInt, maxVal)                      // mod id to make it to be [0, 2^m - 1]
 
 	return idBigInt.Bytes()
 }

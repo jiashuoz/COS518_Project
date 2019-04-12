@@ -11,11 +11,15 @@ type Server struct {
 	node   *Node
 }
 
+func (chordServer *Server) FindSuccessor(id []byte) string {
+	return ""
+}
+
 // FindPredecessor returns the previous node in the circle to id
 func (chordServer *Server) FindPredecessor(id []byte) *NodeInfo {
 	currNode := chordServer.node
-	if betweenRightInclusive(id, currNode.me.id, currNode.successor.id) {
-		return currNode.me
+	if betweenRightInclusive(id, currNode.id, currNode.successor.id) {
+		return &NodeInfo{currNode.id, chordServer.ipAddr}
 	}
 	return chordServer.closestPrecedingFinger(id)
 }
@@ -36,16 +40,16 @@ func betweenRightInclusive(target []byte, begin []byte, end []byte) bool {
 func (chordServer *Server) closestPrecedingFinger(id []byte) *NodeInfo {
 	// slice contains pointers to TableEntry
 	fingerTable := chordServer.node.FingerTable()
-	n := chordServer.node.ID()
-	for i := 159; i >= 0; i-- {
+	currID := chordServer.node.ID()
+	for i := numBits - 1; i >= 0; i-- {
 		if fingerTable[i] != nil {
-			entry := fingerTable[i]
-			if between(entry.succ.id, n, id) {
-				return entry.succ
+			finger := fingerTable[i]
+			if between(finger.id, currID, id) {
+				return &NodeInfo{finger.id, finger.ipAddr}
 			}
 		}
 	}
-	return chordServer.node.me
+	return nil
 }
 
 // Returns true if begin < target < end
