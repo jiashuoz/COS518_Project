@@ -8,15 +8,16 @@ import (
 
 // Node is a primitive structure that contains information about a chord
 type Node struct {
-	id          []byte         // use sha1 to generate 160 bit id (20 bytes)
+	// id          []byte         // use sha1 to generate 160 bit id (20 bytes)
 	fingerTable []*FingerEntry // a table of FingerEntry pointer
 	successor   *NodeInfo      // next node on the identifier circle
 	predecessor *NodeInfo      // previous node on the identifier circle
+	me          *NodeInfo
 }
 
 // NodeInfo contains some basic information about a node
 type NodeInfo struct {
-	id     []byte // id of the node
+	id     []byte // id of the node, sha1 generated 160 bit id (20 bytes)
 	ipAddr string // ip address of the node
 }
 
@@ -30,10 +31,11 @@ type FingerEntry struct {
 func MakeNode(ipAddr string) *Node {
 
 	n := Node{}
-	n.id = hash(ipAddr) // id
+	id := hash(ipAddr) // id
 	n.fingerTable = make([]*FingerEntry, 160)
-	n.successor = MakeNodeInfo(n.id, ipAddr) // initially, successor is itself
-	n.predecessor = nil                      // initially, no predecessor
+	n.successor = MakeNodeInfo(id, ipAddr) // initially, successor is itself
+	n.predecessor = nil                    // initially, no predecessor
+	n.me = MakeNodeInfo(id, ipAddr)
 
 	return &n
 }
@@ -45,7 +47,7 @@ func MakeNodeInfo(id []byte, ipAddr string) *NodeInfo {
 
 // ID returns node's ID in []byte
 func (node *Node) ID() []byte {
-	return node.id
+	return node.me.id
 }
 
 // FingerTable returns a pointer to an array of table entry pointers
@@ -65,13 +67,19 @@ func (node *Node) Predecessor() *NodeInfo {
 
 // String returns the string representation of a Node
 func (node *Node) String() string {
-	str := "id: " + hex.EncodeToString(node.id) + string("\n")
+	str := "Node: \n"
+	if node.me != nil {
+		str += "myself: " + node.me.string()
+	} else {
+		str += "myself: nil"
+	}
 	str += "fingerTable: \n"
 	for _, entry := range node.fingerTable {
 		if entry != nil {
 			str += "   " + entry.string()
 		}
 	}
+
 	if node.successor != nil {
 		str += "successor: " + node.successor.string()
 	} else {
