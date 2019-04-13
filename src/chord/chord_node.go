@@ -61,7 +61,7 @@ func (node *Node) Successor() *NodeInfo {
 func (node *Node) SetSuccessor(newSucc *NodeInfo) {
 	node.fingerTable[0].id = newSucc.id
 	node.fingerTable[0].ipAddr = newSucc.ipAddr
-	node.fingerTable[0].start = addOne(node.id)
+	node.fingerTable[0].start = add(node.id, 1)
 }
 
 // Predecessor returns a pointer to a NodeInfo struct about predecessor
@@ -85,13 +85,13 @@ func (node *Node) String() string {
 		}
 	}
 
-	if node.successor != nil {
+	if node.Successor() != nil {
 		str += "successor: " + node.Successor().string()
 	} else {
 		str += "successor: nil"
 	}
 
-	if node.predecessor != nil {
+	if node.Predecessor() != nil {
 		str += "predecessor: " + node.Predecessor().string()
 	} else {
 		str += "predecessor: nil"

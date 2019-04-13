@@ -65,7 +65,6 @@ func Test1(*testing.T) {
 	fmt.Println(server3.String())
 
 	fmt.Println(server3.LookUp(big.NewInt(5).Bytes()))
-
 }
 
 func TestBetweenRightInclusive(t *testing.T) {
