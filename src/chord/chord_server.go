@@ -1,6 +1,7 @@
 package chord
 
 import (
+	"fmt"
 	"math/big"
 )
 
@@ -11,17 +12,37 @@ type Server struct {
 	node   *Node
 }
 
-func (chordServer *Server) FindSuccessor(id []byte) string {
-	return ""
+// MakeServer returns a pointer to a  server
+func MakeServer(ip string) *Server {
+	server := &Server{
+		name:   "server 1",
+		ipAddr: ip,
+		node:   MakeNode(ip),
+	}
+	return server
+}
+
+func (chordServer *Server) LookUp(id []byte) string {
+	return chordServer.FindSuccessor(id).ipAddr
+}
+
+func (chordServer *Server) FindSuccessor(id []byte) *NodeInfo {
+	predecessor := chordServer.FindPredecessor(id)
+
+	return Servers[predecessor.ipAddr].node.successor
 }
 
 // FindPredecessor returns the previous node in the circle to id
 func (chordServer *Server) FindPredecessor(id []byte) *NodeInfo {
-	currNode := chordServer.node
-	if betweenRightInclusive(id, currNode.id, currNode.successor.id) {
-		return &NodeInfo{currNode.id, chordServer.ipAddr}
+	currServer := chordServer
+
+	for !betweenRightInclusive(id, currServer.node.id, currServer.node.successor.id) {
+		closerNodeInfo := currServer.closestPrecedingFinger(id)
+		fmt.Println(closerNodeInfo)
+		currServer = ChangeServer(closerNodeInfo.ipAddr)
 	}
-	return chordServer.closestPrecedingFinger(id)
+
+	return &NodeInfo{currServer.node.id, currServer.ipAddr}
 }
 
 func betweenRightInclusive(target []byte, begin []byte, end []byte) bool {
@@ -63,4 +84,11 @@ func between(target []byte, begin []byte, end []byte) bool {
 	}
 	// (2, 3) or (3, 3)
 	return targetBigInt.Cmp(beginBigInt) == 1 && targetBigInt.Cmp(endBigInt) == -1
+}
+
+func (chordServer *Server) String() string {
+	// str := "server name: " + chordServer.name + "\n"
+	str := "Server IP: " + chordServer.ipAddr + "\n"
+	str += chordServer.node.String() + "\n"
+	return str
 }

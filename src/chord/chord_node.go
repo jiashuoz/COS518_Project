@@ -31,7 +31,7 @@ type FingerEntry struct {
 func MakeNode(ipAddr string) *Node {
 
 	n := Node{}
-	n.id = hash(ipAddr) // id
+	n.id = hash(ipAddr)
 	n.fingerTable = make([]*FingerEntry, numBits)
 	n.successor = MakeNodeInfo(n.id, ipAddr) // initially, successor is itself
 	n.predecessor = nil                      // initially, no predecessor
@@ -77,7 +77,7 @@ func (node *Node) SetPredecessor(newPred *NodeInfo) {
 // String returns the string representation of a Node
 func (node *Node) String() string {
 	str := "Node: \n"
-	str += "id: " + hex.EncodeToString(node.id)
+	str += "id: " + hex.EncodeToString(node.id) + "\n"
 	str += "fingerTable: \n"
 	for _, entry := range node.fingerTable {
 		if entry != nil {
@@ -112,15 +112,16 @@ func hash(ipAddr string) []byte {
 	maxVal := big.NewInt(0)
 	maxVal.Exp(big.NewInt(2), big.NewInt(numBits), nil) // calculate 2^m
 	idBigInt.Mod(idBigInt, maxVal)                      // mod id to make it to be [0, 2^m - 1]
-
+	if idBigInt.Cmp(big.NewInt(0)) == 0 {
+		return []byte{0}
+	}
 	return idBigInt.Bytes()
 }
 
 func (fingerEntry *FingerEntry) string() string {
 	str := "finger entry: "
 	str += hex.EncodeToString(fingerEntry.start) + " "
-	str += hex.EncodeToString(fingerEntry.id)
-	str += string('\n')
+	str += hex.EncodeToString(fingerEntry.id) + "\n"
 	return str
 }
 
