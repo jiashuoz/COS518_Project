@@ -10,7 +10,6 @@ import (
 type Node struct {
 	id          []byte         // use sha1 to generate 160 bit id (20 bytes)
 	fingerTable []*FingerEntry // a table of FingerEntry pointer
-	successor   *NodeInfo      // next node on the identifier circle
 	predecessor *NodeInfo      // previous node on the identifier circle
 }
 
@@ -33,8 +32,7 @@ func MakeNode(ipAddr string) *Node {
 	n := Node{}
 	n.id = hash(ipAddr)
 	n.fingerTable = make([]*FingerEntry, numBits)
-	n.successor = MakeNodeInfo(n.id, ipAddr) // initially, successor is itself
-	n.predecessor = nil                      // initially, no predecessor
+	n.predecessor = nil // initially, no predecessor
 
 	return &n
 }
@@ -56,12 +54,14 @@ func (node *Node) FingerTable() []*FingerEntry {
 
 // Successor returns a pointer to a NodeInfo struct about successor
 func (node *Node) Successor() *NodeInfo {
-	return node.successor
+	return &NodeInfo{node.fingerTable[0].id, node.fingerTable[0].ipAddr}
 }
 
 // SetSuccessor sets successor field
 func (node *Node) SetSuccessor(newSucc *NodeInfo) {
-	node.successor = newSucc
+	node.fingerTable[0].id = newSucc.id
+	node.fingerTable[0].ipAddr = newSucc.ipAddr
+	node.fingerTable[0].start = addOne(node.id)
 }
 
 // Predecessor returns a pointer to a NodeInfo struct about predecessor
@@ -86,13 +86,13 @@ func (node *Node) String() string {
 	}
 
 	if node.successor != nil {
-		str += "successor: " + node.successor.string()
+		str += "successor: " + node.Successor().string()
 	} else {
 		str += "successor: nil"
 	}
 
 	if node.predecessor != nil {
-		str += "predecessor: " + node.predecessor.string()
+		str += "predecessor: " + node.Predecessor().string()
 	} else {
 		str += "predecessor: nil"
 	}
@@ -121,6 +121,7 @@ func hash(ipAddr string) []byte {
 func (fingerEntry *FingerEntry) string() string {
 	str := "finger entry: "
 	str += hex.EncodeToString(fingerEntry.start) + " "
+	str += "\"" + fingerEntry.ipAddr + "\" "
 	str += hex.EncodeToString(fingerEntry.id) + "\n"
 	return str
 }
@@ -130,4 +131,11 @@ func (nodeInfo *NodeInfo) string() string {
 	str += hex.EncodeToString(nodeInfo.id) + " "
 	str += nodeInfo.ipAddr + "\n"
 	return str
+}
+
+// add takes one number in bytes and second number in int64, return the result in bytes
+func add(numberInBytes []byte, addend int64) []byte {
+	addend1 := big.NewInt(0).SetBytes(numberInBytes)
+	addend2 := big.NewInt(addend)
+	return addend1.Add(addend1, addend2).Bytes()
 }

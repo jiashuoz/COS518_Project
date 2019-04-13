@@ -29,14 +29,16 @@ func (chordServer *Server) LookUp(id []byte) string {
 func (chordServer *Server) FindSuccessor(id []byte) *NodeInfo {
 	predecessor := chordServer.FindPredecessor(id)
 
-	return Servers[predecessor.ipAddr].node.successor
+	return Servers[predecessor.ipAddr].node.Successor()
 }
 
 // FindPredecessor returns the previous node in the circle to id
 func (chordServer *Server) FindPredecessor(id []byte) *NodeInfo {
 	currServer := chordServer
-
-	for !betweenRightInclusive(id, currServer.node.id, currServer.node.successor.id) {
+	fmt.Println(id)
+	fmt.Println(currServer.node.id)
+	fmt.Println(currServer.node.Successor().id)
+	for !betweenRightInclusive(id, currServer.node.id, currServer.node.Successor().id) {
 		closerNodeInfo := currServer.closestPrecedingFinger(id)
 		fmt.Println(closerNodeInfo)
 		currServer = ChangeServer(closerNodeInfo.ipAddr)
