@@ -21,6 +21,13 @@ func MakeServer(ip string) *Server {
 	return server
 }
 
+// func (chordServer *Server) InitFingerTable(existingServer *Server) {
+// 	currNode := chordServer.node
+// 	fingerTable := currNode.FingerTable()
+// 	successor := existingServer.FindSuccessor(fingerTable[0].start)
+
+// }
+
 // LookUp returns the ip addr of the successor node of id
 func (chordServer *Server) LookUp(id []byte) string {
 	return chordServer.FindSuccessor(id).ipAddr
@@ -52,7 +59,7 @@ func (chordServer *Server) closestPrecedingFinger(id []byte) *NodeInfo {
 	fingerTable := chordServer.node.FingerTable()
 	currID := chordServer.node.ID()
 	for i := numBits - 1; i >= 0; i-- {
-		if fingerTable[i] != nil {
+		if fingerTable[i].id != nil {
 			finger := fingerTable[i]
 			if between(finger.id, currID, id) {
 				return &NodeInfo{finger.id, finger.ipAddr}

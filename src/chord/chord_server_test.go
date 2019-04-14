@@ -1,5 +1,7 @@
 package chord
 
+// chord_server_test.go should test functions in chord_server.go
+
 import (
 	"fmt"
 	"math/big"
@@ -7,7 +9,6 @@ import (
 )
 
 func Test1(t *testing.T) {
-	//
 	server0 := MakeServer("2")  // ip == "2", id == 0
 	server1 := MakeServer("31") // ip == "31", id == 1
 	server3 := MakeServer("3")  // ip == "3", id == 3
