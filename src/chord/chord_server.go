@@ -1,7 +1,6 @@
 package chord
 
 import (
-	"fmt"
 	"math/big"
 )
 
@@ -36,16 +35,14 @@ func (chordServer *Server) FindSuccessor(id []byte) *NodeInfo {
 // FindPredecessor returns the previous node in the circle to id
 func (chordServer *Server) FindPredecessor(id []byte) *NodeInfo {
 	currServer := chordServer
-	fmt.Printf("looking for : %d\n", id)
-	fmt.Printf("curr node id: %d\n", currServer.node.id)
-	fmt.Printf("curr node successor id: %d\n", currServer.node.Successor().id)
+	DPrintf("looking for : %d\n", id)
+	DPrintf("curr node id: %d\n", currServer.node.id)
+	DPrintf("curr node successor id: %d\n", currServer.node.Successor().id)
 	for !betweenRightInclusive(id, currServer.node.id, currServer.node.Successor().id) {
 		closerNodeInfo := currServer.closestPrecedingFinger(id)
-		fmt.Println(closerNodeInfo)
-		fmt.Println(closerNodeInfo.ipAddr)
 		currServer = ChangeServer(closerNodeInfo.ipAddr)
 	}
-	fmt.Printf("predecessor of id: %d\n", currServer.node.id)
+	DPrintf("predecessor of id: %d\n", currServer.node.id)
 	return &NodeInfo{currServer.node.id, currServer.ipAddr}
 }
 
