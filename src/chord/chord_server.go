@@ -30,7 +30,6 @@ func (chordServer *Server) LookUp(id []byte) string {
 // FindSuccessor returns the successor node of id
 func (chordServer *Server) FindSuccessor(id []byte) *NodeInfo {
 	predecessor := chordServer.FindPredecessor(id)
-
 	return Servers[predecessor.ipAddr].node.Successor()
 }
 
@@ -43,9 +42,10 @@ func (chordServer *Server) FindPredecessor(id []byte) *NodeInfo {
 	for !betweenRightInclusive(id, currServer.node.id, currServer.node.Successor().id) {
 		closerNodeInfo := currServer.closestPrecedingFinger(id)
 		fmt.Println(closerNodeInfo)
+		fmt.Println(closerNodeInfo.ipAddr)
 		currServer = ChangeServer(closerNodeInfo.ipAddr)
 	}
-
+	fmt.Printf("predecessor of id: %d\n", currServer.node.id)
 	return &NodeInfo{currServer.node.id, currServer.ipAddr}
 }
 
@@ -83,10 +83,10 @@ func between(target []byte, begin []byte, end []byte) bool {
 	beginBigInt := big.NewInt(0).SetBytes(begin)
 	endBigInt := big.NewInt(0).SetBytes(end)
 
-	if beginBigInt.Cmp(endBigInt) == 1 { // (3, 2)
+	if beginBigInt.Cmp(endBigInt) == 1 || beginBigInt.Cmp(endBigInt) == 0 { // (3, 2), or (3, 3)
 		return targetBigInt.Cmp(beginBigInt) == 1 || targetBigInt.Cmp(endBigInt) == -1
 	}
-	// (2, 3) or (3, 3)
+	// (2, 3)
 	return targetBigInt.Cmp(beginBigInt) == 1 && targetBigInt.Cmp(endBigInt) == -1
 }
 
