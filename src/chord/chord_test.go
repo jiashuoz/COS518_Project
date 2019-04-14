@@ -116,20 +116,19 @@ func TestBetweenRightInclusive(t *testing.T) {
 		t.Errorf("betweenRightInclusive(0, 3, 0) = %t; want true", got2)
 		fail = true
 	}
-	//3
-	got4 := betweenRightInclusive(big.NewInt(3).Bytes(), big.NewInt(3).Bytes(), big.NewInt(0).Bytes())
-	if got4 != false {
-		t.Errorf("betweenRightInclusive(3, 3, 0) = %t; want false", got4)
-		fail = true
-	}
 	//1
 	got3 := betweenRightInclusive(big.NewInt(1).Bytes(), big.NewInt(3).Bytes(), big.NewInt(0).Bytes())
 	if got3 != false {
 		t.Errorf("betweenRightInclusive(1, 3, 0) = %t; want false", got3)
 		fail = true
 	}
-
-
+	//3
+	got4 := betweenRightInclusive(big.NewInt(3).Bytes(), big.NewInt(3).Bytes(), big.NewInt(0).Bytes())
+	if got4 != false {
+		t.Errorf("betweenRightInclusive(3, 3, 0) = %t; want false", got4)
+		fail = true
+	}
+	
 	// test (1, 3]
 	//2
 	got5 := betweenRightInclusive(big.NewInt(2).Bytes(), big.NewInt(1).Bytes(), big.NewInt(3).Bytes())
@@ -172,7 +171,33 @@ func TestBetweenRightInclusive(t *testing.T) {
 func TestBetween(t *testing.T) {
 	fmt.Println("Testing between:")
 	fail := false
-	
+
+	// test (3, 0)
+	//5
+	got1 := betweenRightInclusive(big.NewInt(5).Bytes(), big.NewInt(3).Bytes(), big.NewInt(0).Bytes())
+	if got1 != true {
+		t.Errorf("between(5, 3, 0) = %t; want true", got1)
+		fail = true
+	}
+	//0
+	got2 := betweenRightInclusive(big.NewInt(0).Bytes(), big.NewInt(3).Bytes(), big.NewInt(0).Bytes())
+	if got2 != false {
+		t.Errorf("between(0, 3, 0) = %t; want false", got2)
+		fail = false
+	}
+	//1
+	got3 := betweenRightInclusive(big.NewInt(1).Bytes(), big.NewInt(3).Bytes(), big.NewInt(0).Bytes())
+	if got3 != false {
+		t.Errorf("between(1, 3, 0) = %t; want false", got3)
+		fail = true
+	}
+	//3
+	got4 := betweenRightInclusive(big.NewInt(3).Bytes(), big.NewInt(3).Bytes(), big.NewInt(0).Bytes())
+	if got4 != false {
+		t.Errorf("between(3, 3, 0) = %t; want false", got4)
+		fail = true
+	}
+
 	// test (1, 3)
 	//2
 	got5 := between(big.NewInt(2).Bytes(), big.NewInt(1).Bytes(), big.NewInt(3).Bytes())
