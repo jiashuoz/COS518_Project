@@ -9,10 +9,6 @@ import (
 )
 
 func Test1(t *testing.T) {
-<<<<<<< HEAD:src/chord/chord_server_test.go
-=======
-	fmt.Println("Testing make server and finger table:")
->>>>>>> 42181232f55d703ad497c3824f07f3015e577a65:src/chord/chord_test.go
 	server0 := MakeServer("2")  // ip == "2", id == 0
 	server1 := MakeServer("31") // ip == "31", id == 1
 	server3 := MakeServer("3")  // ip == "3", id == 3
