@@ -21,12 +21,40 @@ func MakeServer(ip string) *Server {
 	return server
 }
 
-// func (chordServer *Server) InitFingerTable(existingServer *Server) {
-// 	currNode := chordServer.node
-// 	fingerTable := currNode.FingerTable()
-// 	successor := existingServer.FindSuccessor(fingerTable[0].start)
+// Join adds chordServer to the network
+func (chordServer *Server) Join(exisitingServer *Server) {
+	if exisitingServer == nil { // the only node in the network
+		for _, entry := range chordServer.node.FingerTable() {
+			entry.id = chordServer.node.ID()
+			entry.ipAddr = chordServer.ipAddr
+		}
+		chordServer.node.predecessor = &NodeInfo{chordServer.node.ID(), chordServer.ipAddr}
+	} else {
 
-// }
+	}
+}
+
+func (chordServer *Server) InitFingerTable(existingServer *Server) {
+	currNode := chordServer.node
+	fingerTable := currNode.FingerTable()
+	successor := existingServer.FindSuccessor(fingerTable[0].start)
+	successorServer := Servers[successor.ipAddr]
+	// curr.prev = node.prev
+	currNode.predecessor = &NodeInfo{successorServer.node.predecessor.id, successorServer.node.predecessor.ipAddr}
+	// node.prev = curr
+	successorServer.node.predecessor = &NodeInfo{currNode.ID(), chordServer.ipAddr}
+
+	for i := 1; i < numBits; i++ {
+		if betweenLeftInclusive(fingerTable[i].start, currNode.ID(), fingerTable[i-1].id) {
+			fingerTable[i].id = fingerTable[i-1].id
+			fingerTable[i].ipAddr = fingerTable[i-1].ipAddr
+		} else {
+			fartherNodeInfo := existingServer.FindSuccessor(fingerTable[i+1].start)
+			fingerTable[i].id = fartherNodeInfo.id
+			fingerTable[i].ipAddr = fartherNodeInfo.ipAddr
+		}
+	}
+}
 
 // LookUp returns the ip addr of the successor node of id
 func (chordServer *Server) LookUp(id []byte) string {
@@ -69,6 +97,13 @@ func (chordServer *Server) closestPrecedingFinger(id []byte) *NodeInfo {
 	return nil
 }
 
+func (chordServer *Server) String() string {
+	// str := "server name: " + chordServer.name + "\n"
+	str := "Server IP: " + chordServer.ipAddr + "\n"
+	str += chordServer.node.String() + "\n"
+	return str
+}
+
 func betweenRightInclusive(target []byte, begin []byte, end []byte) bool {
 	targetBigInt := big.NewInt(0).SetBytes(target)
 	beginBigInt := big.NewInt(0).SetBytes(begin)
@@ -94,9 +129,20 @@ func between(target []byte, begin []byte, end []byte) bool {
 	return targetBigInt.Cmp(beginBigInt) == 1 && targetBigInt.Cmp(endBigInt) == -1
 }
 
-func (chordServer *Server) String() string {
-	// str := "server name: " + chordServer.name + "\n"
-	str := "Server IP: " + chordServer.ipAddr + "\n"
-	str += chordServer.node.String() + "\n"
-	return str
+// Returns true if begin <= target < end, in the ring
+func betweenLeftInclusive(target []byte, begin []byte, end []byte) bool {
+	targetBigInt := big.NewInt(0).SetBytes(target)
+	beginBigInt := big.NewInt(0).SetBytes(begin)
+	endBigInt := big.NewInt(0).SetBytes(end)
+
+	// [2, 3)
+	if beginBigInt.Cmp(endBigInt) == -1 {
+		return (targetBigInt.Cmp(beginBigInt) == 1 || targetBigInt.Cmp(beginBigInt) == 0) &&
+			targetBigInt.Cmp(endBigInt) == -1
+	}
+
+	// [2, 3)
+	return targetBigInt.Cmp(beginBigInt) == 0 ||
+		targetBigInt.Cmp(beginBigInt) == 1 ||
+		targetBigInt.Cmp(endBigInt) == -1
 }

@@ -8,11 +8,12 @@ import (
 	"testing"
 )
 
+func TestJoin(t *testing.T) {
+
+}
+
 func Test1(t *testing.T) {
-<<<<<<< HEAD:src/chord/chord_server_test.go
-=======
 	fmt.Println("Testing make server and finger table:")
->>>>>>> 42181232f55d703ad497c3824f07f3015e577a65:src/chord/chord_test.go
 	server0 := MakeServer("2")  // ip == "2", id == 0
 	server1 := MakeServer("31") // ip == "31", id == 1
 	server3 := MakeServer("3")  // ip == "3", id == 3
@@ -134,7 +135,6 @@ func TestBetweenRightInclusive(t *testing.T) {
 		fail = true
 	}
 
-
 	// test (1, 3]
 	//2
 	got5 := betweenRightInclusive(big.NewInt(2).Bytes(), big.NewInt(1).Bytes(), big.NewInt(3).Bytes())
@@ -167,17 +167,17 @@ func TestBetweenRightInclusive(t *testing.T) {
 		fail = true
 	}
 
-	if(!fail) {
+	if !fail {
 		fmt.Println("PASS")
 	}
-	
+
 }
 
 // this should test the between func in chord_server.go
 func TestBetween(t *testing.T) {
 	fmt.Println("Testing between:")
 	fail := false
-	
+
 	// test (1, 3)
 	//2
 	got5 := between(big.NewInt(2).Bytes(), big.NewInt(1).Bytes(), big.NewInt(3).Bytes())
@@ -210,8 +210,12 @@ func TestBetween(t *testing.T) {
 		fail = true
 	}
 
-	if(!fail) {
+	if !fail {
 		fmt.Println("PASS")
 	}
+}
+
+// TODO: this should test betweenLeftInclusive func in chord_server.go
+func TestBetweenLeftInclusive(t *testing.T) {
 
 }
