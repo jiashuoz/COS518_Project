@@ -132,10 +132,3 @@ func (nodeInfo *NodeInfo) string() string {
 	str += nodeInfo.ipAddr + "\n"
 	return str
 }
-
-// add takes one number in bytes and second number in int64, return the result in bytes
-func add(numberInBytes []byte, addend int64) []byte {
-	addend1 := big.NewInt(0).SetBytes(numberInBytes)
-	addend2 := big.NewInt(addend)
-	return addend1.Add(addend1, addend2).Bytes()
-}

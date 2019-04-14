@@ -22,10 +22,12 @@ func MakeServer(ip string) *Server {
 	return server
 }
 
+// LookUp returns the ip addr of the successor node of id
 func (chordServer *Server) LookUp(id []byte) string {
 	return chordServer.FindSuccessor(id).ipAddr
 }
 
+// FindSuccessor returns the successor node of id
 func (chordServer *Server) FindSuccessor(id []byte) *NodeInfo {
 	predecessor := chordServer.FindPredecessor(id)
 
@@ -35,9 +37,9 @@ func (chordServer *Server) FindSuccessor(id []byte) *NodeInfo {
 // FindPredecessor returns the previous node in the circle to id
 func (chordServer *Server) FindPredecessor(id []byte) *NodeInfo {
 	currServer := chordServer
-	fmt.Println(id)
-	fmt.Println(currServer.node.id)
-	fmt.Println(currServer.node.Successor().id)
+	fmt.Printf("looking for : %d\n", id)
+	fmt.Printf("curr node id: %d\n", currServer.node.id)
+	fmt.Printf("curr node successor id: %d\n", currServer.node.Successor().id)
 	for !betweenRightInclusive(id, currServer.node.id, currServer.node.Successor().id) {
 		closerNodeInfo := currServer.closestPrecedingFinger(id)
 		fmt.Println(closerNodeInfo)
@@ -45,18 +47,6 @@ func (chordServer *Server) FindPredecessor(id []byte) *NodeInfo {
 	}
 
 	return &NodeInfo{currServer.node.id, currServer.ipAddr}
-}
-
-func betweenRightInclusive(target []byte, begin []byte, end []byte) bool {
-	targetBigInt := big.NewInt(0).SetBytes(target)
-	beginBigInt := big.NewInt(0).SetBytes(begin)
-	endBigInt := big.NewInt(0).SetBytes(end)
-
-	if beginBigInt.Cmp(endBigInt) == 1 { // begin > end, (3, 0]
-		return targetBigInt.Cmp(beginBigInt) == 1 || targetBigInt.Cmp(endBigInt) == -1 || targetBigInt.Cmp(endBigInt) == 0
-	}
-	// begin < end, (2, 3]
-	return targetBigInt.Cmp(beginBigInt) == 1 && (targetBigInt.Cmp(endBigInt) == -1 || targetBigInt.Cmp(endBigInt) == 0)
 }
 
 // Returns the closest node preceding id: previous node in the circle to id
@@ -73,6 +63,18 @@ func (chordServer *Server) closestPrecedingFinger(id []byte) *NodeInfo {
 		}
 	}
 	return nil
+}
+
+func betweenRightInclusive(target []byte, begin []byte, end []byte) bool {
+	targetBigInt := big.NewInt(0).SetBytes(target)
+	beginBigInt := big.NewInt(0).SetBytes(begin)
+	endBigInt := big.NewInt(0).SetBytes(end)
+
+	if beginBigInt.Cmp(endBigInt) == 1 { // begin > end, (3, 0]
+		return targetBigInt.Cmp(beginBigInt) == 1 || targetBigInt.Cmp(endBigInt) == -1 || targetBigInt.Cmp(endBigInt) == 0
+	}
+	// begin < end, (2, 3]
+	return targetBigInt.Cmp(beginBigInt) == 1 && (targetBigInt.Cmp(endBigInt) == -1 || targetBigInt.Cmp(endBigInt) == 0)
 }
 
 // Returns true if begin < target < end

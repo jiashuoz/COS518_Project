@@ -64,18 +64,18 @@ func Test1(*testing.T) {
 	fmt.Println(server1.String())
 	fmt.Println(server3.String())
 
-	fmt.Println(server3.LookUp(big.NewInt(5).Bytes()))
+	// fmt.Println(server3.LookUp(intToBytes(5)))
+	fmt.Println(server3.LookUp(intToBytes(1)))
 }
 
+// jace TODO: this test is not very thorough, needs more testing
+// this test should test the betweenRightInclusive func in chord_server.go
 func TestBetweenRightInclusive(t *testing.T) {
-
 	fmt.Println(betweenRightInclusive(big.NewInt(5).Bytes(), big.NewInt(3).Bytes(), big.NewInt(0).Bytes()))
-
 }
 
-func intToBytes(x int64) []byte {
-	if x == 0 {
-		return []byte{0}
-	}
-	return big.NewInt(x).Bytes()
+// jace TODO: this test is not complete, needs some testing
+// this should test the between func in chord_server.go
+func TestBetween(t *testing.T) {
+
 }
