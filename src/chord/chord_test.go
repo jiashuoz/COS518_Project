@@ -6,7 +6,7 @@ import (
 	"testing"
 )
 
-func Test1(*testing.T) {
+func Test1(t *testing.T) {
 	fmt.Println("Testing make server and finger table:")
 	server0 := MakeServer("2")  // ip == "2", id == 0
 	server1 := MakeServer("31") // ip == "31", id == 1
