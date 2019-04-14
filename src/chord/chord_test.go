@@ -70,31 +70,31 @@ func Test1(t *testing.T) {
 		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey0, "2")
 	}
 	ipForKey1 := server3.LookUp(intToBytes(1))
-	if ipForKey0 != "2" {
+	if ipForKey1 != "31" {
 		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey1, "31")
 	}
 	ipForKey2 := server3.LookUp(intToBytes(2))
-	if ipForKey0 != "2" {
+	if ipForKey2 != "3" {
 		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey2, "3")
 	}
 	ipForKey3 := server3.LookUp(intToBytes(3))
-	if ipForKey0 != "2" {
+	if ipForKey3 != "3" {
 		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey3, "3")
 	}
 	ipForKey4 := server3.LookUp(intToBytes(4))
-	if ipForKey0 != "2" {
+	if ipForKey4 != "2" {
 		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey4, "2")
 	}
 	ipForKey5 := server3.LookUp(intToBytes(5))
-	if ipForKey0 != "2" {
+	if ipForKey5 != "2" {
 		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey5, "2")
 	}
 	ipForKey6 := server3.LookUp(intToBytes(6))
-	if ipForKey0 != "2" {
+	if ipForKey6 != "2" {
 		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey6, "2")
 	}
 	ipForKey7 := server3.LookUp(intToBytes(7))
-	if ipForKey0 != "2" {
+	if ipForKey7 != "2" {
 		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey7, "2")
 	}
 }
