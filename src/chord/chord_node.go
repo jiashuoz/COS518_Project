@@ -32,6 +32,15 @@ func MakeNode(ipAddr string) *Node {
 	n := Node{}
 	n.id = hash(ipAddr)
 	n.fingerTable = make([]*FingerEntry, numBits)
+	idInt := big.NewInt(0).SetBytes(n.id)
+
+	for i := range n.fingerTable {
+		iInt := big.NewInt(int64(i))
+		n.fingerTable[i] = &FingerEntry{}
+		// n.id + 2^i
+		n.fingerTable[i].start = addBytesBigint(n.id, big.NewInt(0).Exp(big.NewInt(2), iInt, nil))
+		DPrintf("start: %d\n", big.NewInt(0).Exp(idInt, iInt, nil).Bytes())
+	}
 	n.predecessor = nil // initially, no predecessor
 
 	return &n
@@ -61,7 +70,7 @@ func (node *Node) Successor() *NodeInfo {
 func (node *Node) SetSuccessor(newSucc *NodeInfo) {
 	node.fingerTable[0].id = newSucc.id
 	node.fingerTable[0].ipAddr = newSucc.ipAddr
-	node.fingerTable[0].start = add(node.id, 1)
+	node.fingerTable[0].start = addBytesInt64(node.id, 1)
 }
 
 // Predecessor returns a pointer to a NodeInfo struct about predecessor

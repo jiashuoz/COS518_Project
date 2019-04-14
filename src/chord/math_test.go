@@ -6,10 +6,10 @@ import (
 	"testing"
 )
 
-func TestAdd(t *testing.T) {
+func TestAddBytesInt64(t *testing.T) {
 	number1 := big.NewInt(10).Bytes()
 	number2 := int64(20)
-	result := big.NewInt(0).SetBytes(add(number1, number2))
+	result := big.NewInt(0).SetBytes(addBytesInt64(number1, number2))
 	fmt.Println(result)
 }
 
