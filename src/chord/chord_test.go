@@ -6,7 +6,8 @@ import (
 	"testing"
 )
 
-func Test1(*testing.T) {
+func Test1(t *testing.T) {
+	//
 	server0 := MakeServer("2")  // ip == "2", id == 0
 	server1 := MakeServer("31") // ip == "31", id == 1
 	server3 := MakeServer("3")  // ip == "3", id == 3
@@ -64,8 +65,38 @@ func Test1(*testing.T) {
 	fmt.Println(server1.String())
 	fmt.Println(server3.String())
 
-	// fmt.Println(server3.LookUp(intToBytes(5)))
-	fmt.Println(server3.LookUp(intToBytes(1)))
+	ipForKey0 := server3.LookUp(intToBytes(0))
+	if ipForKey0 != "2" {
+		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey0, "2")
+	}
+	ipForKey1 := server3.LookUp(intToBytes(1))
+	if ipForKey0 != "2" {
+		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey1, "31")
+	}
+	ipForKey2 := server3.LookUp(intToBytes(2))
+	if ipForKey0 != "2" {
+		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey2, "3")
+	}
+	ipForKey3 := server3.LookUp(intToBytes(3))
+	if ipForKey0 != "2" {
+		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey3, "3")
+	}
+	ipForKey4 := server3.LookUp(intToBytes(4))
+	if ipForKey0 != "2" {
+		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey4, "2")
+	}
+	ipForKey5 := server3.LookUp(intToBytes(5))
+	if ipForKey0 != "2" {
+		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey5, "2")
+	}
+	ipForKey6 := server3.LookUp(intToBytes(6))
+	if ipForKey0 != "2" {
+		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey6, "2")
+	}
+	ipForKey7 := server3.LookUp(intToBytes(7))
+	if ipForKey0 != "2" {
+		t.Errorf("LookUp was incorrect, got: %s, want: %s.", ipForKey7, "2")
+	}
 }
 
 // jace TODO: this test is not very thorough, needs more testing
