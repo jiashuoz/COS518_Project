@@ -61,7 +61,8 @@ func (chordServer *Server) InitFingerTable(existingServer *Server) {
 			fingerTable[i].ipAddr = fartherNode.ipAddr
 		}
 	}
-	// successorServer.node.SetSuccessor(currNode)
+	successorServer.node.SetPredecessor(currNode)
+	ChangeServer(currNode.Predecessor().IP()).node.SetSuccessor(currNode)
 }
 
 // // Update all nodes whose finger tables should refer to chordServer
