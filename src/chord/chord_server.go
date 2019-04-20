@@ -1,7 +1,7 @@
 package chord
 
 import (
-	// "bytes"
+	"bytes"
 	"math/big"
 )
 
@@ -65,52 +65,50 @@ func (chordServer *Server) InitFingerTable(existingServer *Server) {
 	ChangeServer(currNode.Predecessor().IP()).node.SetSuccessor(currNode)
 }
 
-// // Update all nodes whose finger tables should refer to chordServer
-// func (chordServer *Server) UpdateOthers() {
-// 	prev := chordServer.FindPredecessor(chordServer.node.ID())
-// 	ChangeServer(prev.IP()).node.SetPredecessor
-// 	for i := 0; i < numBits; i++ {
-// 		// p = find_predecessor(n - 2^i)
-// 		DPrintf("n-2^i = %v", chordServer.nodeIdToUpdateFinger(i))
-// 		p := chordServer.FindPredecessor(chordServer.nodeIdToUpdateFinger(i))
-// 		DPrintf("predecessor: %v", p.ID())
-// 		if bytes.Compare(p.ID(), chordServer.node.ID()) == 0 {
-// 			return
-// 		}
-// 		pServer := ChangeServer(p.IP())
-// 		pServer.UpdateFingerTable(chordServer.node, i)
-// 	}
-// }
+// Update all nodes whose finger tables should refer to chordServer
+func (chordServer *Server) UpdateOthers() {
+	for i := 0; i < numBits; i++ {
+		// p = find_predecessor(n - 2^i)
+		DPrintf("n-2^i = %v", chordServer.nodeIdToUpdateFinger(i))
+		p := chordServer.FindPredecessor(chordServer.nodeIdToUpdateFinger(i))
+		DPrintf("predecessor: %v", p.ID())
+		if bytes.Compare(p.ID(), chordServer.node.ID()) == 0 {
+			return
+		}
+		pServer := ChangeServer(p.IP())
+		pServer.UpdateFingerTable(chordServer.node, i)
+	}
+}
 
-// // Returns the id of node whose ith finger might be chordServer
-// func (chordServer *Server) nodeIdToUpdateFinger(i int) []byte {
-// 	n := new(big.Int).SetBytes(chordServer.node.ID())
-// 	offset := new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(i)), nil)
-// 	diff := new(big.Int).Sub(n, offset)
-// 	// diff.Add(diff, big.NewInt(1))
+// Returns the id of node whose ith finger might be chordServer
+func (chordServer *Server) nodeIdToUpdateFinger(i int) []byte {
+	n := new(big.Int).SetBytes(chordServer.node.ID())
+	offset := new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(i)), nil)
+	diff := new(big.Int).Sub(n, offset)
+	// diff.Add(diff, big.NewInt(1))
 
-// 	if diff.Sign() < 0 {
-// 		diff = diff.Add(diff, new(big.Int).Exp(big.NewInt(2), big.NewInt(numBits), nil))
-// 	}
+	if diff.Sign() < 0 {
+		diff = diff.Add(diff, new(big.Int).Exp(big.NewInt(2), big.NewInt(numBits), nil))
+	}
 
-// 	if diff.Cmp(big.NewInt(0)) == 0 {
-// 		return []byte{0}
-// 	}
+	if diff.Cmp(big.NewInt(0)) == 0 {
+		return []byte{0}
+	}
 
-// 	return diff.Bytes()
-// }
+	return diff.Bytes()
+}
 
-// // Update chordServer's finger if s should be the ith finger
-// func (chordServer *Server) UpdateFingerTable(s *Node, i int) {
-// 	fingerTable := chordServer.node.fingerTable
-// 	if betweenLeftInclusive(s.ID(), chordServer.node.ID(), fingerTable[i].id) {
-// 		fingerTable[i].id = s.ID()
-// 		fingerTable[i].ipAddr = s.IP()
-// 		p := chordServer.node.Predecessor()
-// 		pServer := ChangeServer(p.IP())
-// 		pServer.UpdateFingerTable(s, i)
-// 	}
-// }
+// Update chordServer's finger if s should be the ith finger
+func (chordServer *Server) UpdateFingerTable(s *Node, i int) {
+	fingerTable := chordServer.node.fingerTable
+	if betweenLeftInclusive(s.ID(), chordServer.node.ID(), fingerTable[i].id) {
+		fingerTable[i].id = s.ID()
+		fingerTable[i].ipAddr = s.IP()
+		p := chordServer.node.Predecessor()
+		pServer := ChangeServer(p.IP())
+		pServer.UpdateFingerTable(s, i)
+	}
+}
 
 // LookUp returns the ip addr of the successor node of id
 func (chordServer *Server) LookUp(id []byte) string {

@@ -22,6 +22,15 @@ func TestJoinOther(t *testing.T) {
 	fmt.Println(server0.String())
 	fmt.Println(server1.String())
 
+	fmt.Println("Adding node3...")
+
+	server3 := MakeServer("3")
+	server3.Join(server0)
+
+	fmt.Println(server0.String())
+	fmt.Println(server1.String())
+	fmt.Println(server3.String())
+
 }
 
 func TestJoinNone(t *testing.T) {
