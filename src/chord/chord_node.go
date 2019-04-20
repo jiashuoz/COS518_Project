@@ -8,9 +8,10 @@ import (
 
 // Node is a primitive structure that contains information about a chord
 type Node struct {
+	ipAddr      string
 	id          []byte         // use sha1 to generate 160 bit id (20 bytes)
 	fingerTable []*FingerEntry // a table of FingerEntry pointer
-	predecessor *NodeInfo      // previous node on the identifier circle
+	predecessor *Node          // previous node on the identifier circle
 }
 
 // NodeInfo contains some basic information about a node
@@ -30,6 +31,7 @@ type FingerEntry struct {
 func MakeNode(ipAddr string) *Node {
 
 	n := Node{}
+	n.ipAddr = ipAddr
 	n.id = hash(ipAddr)
 	n.fingerTable = make([]*FingerEntry, numBits)
 	idInt := big.NewInt(0).SetBytes(n.id)
@@ -56,30 +58,34 @@ func (node *Node) ID() []byte {
 	return node.id
 }
 
+// IP returns node's IP in string
+func (node *Node) IP() string {
+	return node.ipAddr
+}
+
 // FingerTable returns a pointer to an array of table entry pointers
 func (node *Node) FingerTable() []*FingerEntry {
 	return node.fingerTable
 }
 
 // Successor returns a pointer to a NodeInfo struct about successor
-func (node *Node) Successor() *NodeInfo {
-	return &NodeInfo{node.fingerTable[0].id, node.fingerTable[0].ipAddr}
+func (node *Node) Successor() *Node {
+	return &Node{id: node.fingerTable[0].id, ipAddr: node.fingerTable[0].ipAddr}
 }
 
 // SetSuccessor sets successor field
-func (node *Node) SetSuccessor(newSucc *NodeInfo) {
+func (node *Node) SetSuccessor(newSucc *Node) {
 	node.fingerTable[0].id = newSucc.id
 	node.fingerTable[0].ipAddr = newSucc.ipAddr
-	node.fingerTable[0].start = addBytesInt64(node.id, 1)
 }
 
 // Predecessor returns a pointer to a NodeInfo struct about predecessor
-func (node *Node) Predecessor() *NodeInfo {
+func (node *Node) Predecessor() *Node {
 	return node.predecessor
 }
 
 // SetPredecessor sets successor field
-func (node *Node) SetPredecessor(newPred *NodeInfo) {
+func (node *Node) SetPredecessor(newPred *Node) {
 	node.predecessor = newPred
 }
 
@@ -135,9 +141,9 @@ func (fingerEntry *FingerEntry) string() string {
 	return str
 }
 
-func (nodeInfo *NodeInfo) string() string {
-	str := "NodeInfo: "
-	str += hex.EncodeToString(nodeInfo.id) + " "
-	str += nodeInfo.ipAddr + "\n"
+func (node *Node) string() string {
+	str := "Node: "
+	str += hex.EncodeToString(node.id) + " "
+	str += node.ipAddr + "\n"
 	return str
 }

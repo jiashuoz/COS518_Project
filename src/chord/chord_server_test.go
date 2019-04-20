@@ -8,8 +8,26 @@ import (
 	"testing"
 )
 
-func TestJoin(t *testing.T) {
+func TestJoinOther(t *testing.T) {
+	server0 := MakeServer("2") // id == 0
+	Servers["2"] = server0
+	server0.Join(nil)
+	fmt.Println(server0.String())
 
+	server1 := MakeServer("31") // id == 1
+	fmt.Println(server1.String())
+	Servers["31"] = server1
+	server1.Join(server0)
+
+	fmt.Println(server0.String())
+	fmt.Println(server1.String())
+
+}
+
+func TestJoinNone(t *testing.T) {
+	server := MakeServer("2")
+	server.Join(nil)
+	fmt.Println(server.String())
 }
 
 func Test1(t *testing.T) {
