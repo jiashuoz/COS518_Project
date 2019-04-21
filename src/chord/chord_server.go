@@ -30,23 +30,25 @@ func (chordServer *Server) Join(exisitingServer *Server) {
 		chordServer.node.predecessor = &Node{id: chordServer.node.ID(), ipAddr: chordServer.node.IP()}
 	} else { // update other nodes' fingers
 		chordServer.InitFingerTable(exisitingServer)
-		// chordServer.UpdateOthers()
+		chordServer.UpdateOthers()
 	}
 }
 
 func (chordServer *Server) InitFingerTable(existingServer *Server) {
-	DPrintf("Start Initializing Finger Table...")
+	DPrintf("Node%v: Start Initializing Finger Table...", chordServer.node.ID())
 	currNode := chordServer.node
 	fingerTable := currNode.FingerTable()
 	successor := existingServer.FindSuccessor(fingerTable[0].start)
 	successorServer := Servers[successor.ipAddr]
-	DPrintf("successor of node1 should be 0: %v\n", successorServer.node.ID())
+	DPrintf("successor should be 0: %v\n", successorServer.node.ID())
 	// curr.prev = node.prev
 	currNode.predecessor = &Node{id: successorServer.node.predecessor.id, ipAddr: successorServer.node.predecessor.ipAddr}
 	currNode.SetSuccessor(&Node{id: successorServer.node.ID(), ipAddr: successorServer.node.IP()})
 	// node.prev = curr
 	//successorServer.node.predecessor = &Node{id: currNode.ID(), ipAddr: chordServer.node.ipAddr}
-	DPrintf("node1's first finger is: id: %v  ip: %v", currNode.Successor().ID(), currNode.Successor().IP())
+	successorServer.node.SetPredecessor(currNode)
+	ChangeServer(currNode.Predecessor().IP()).node.SetSuccessor(currNode)
+	DPrintf("first finger is: id: %v  ip: %v", currNode.Successor().ID(), currNode.Successor().IP())
 	for i := 1; i < numBits; i++ {
 		if betweenLeftInclusive(fingerTable[i].start, currNode.ID(), fingerTable[i-1].id) {
 			DPrintf("%v should be between %v and %v\n",
@@ -56,13 +58,13 @@ func (chordServer *Server) InitFingerTable(existingServer *Server) {
 			fingerTable[i].id = fingerTable[i-1].id
 			fingerTable[i].ipAddr = fingerTable[i-1].ipAddr
 		} else {
+			DPrintf("else, find successor based on fingerTable")
 			fartherNode := existingServer.FindSuccessor(fingerTable[i+1].start)
 			fingerTable[i].id = fartherNode.id
 			fingerTable[i].ipAddr = fartherNode.ipAddr
 		}
 	}
-	successorServer.node.SetPredecessor(currNode)
-	ChangeServer(currNode.Predecessor().IP()).node.SetSuccessor(currNode)
+
 }
 
 // Update all nodes whose finger tables should refer to chordServer
@@ -72,11 +74,17 @@ func (chordServer *Server) UpdateOthers() {
 		DPrintf("n-2^i = %v", chordServer.nodeIdToUpdateFinger(i))
 		p := chordServer.FindPredecessor(chordServer.nodeIdToUpdateFinger(i))
 		DPrintf("predecessor: %v", p.ID())
+
 		if bytes.Compare(p.ID(), chordServer.node.ID()) == 0 {
 			return
 		}
+
+		if bytes.Compare(p.Successor().ID(), chordServer.nodeIdToUpdateFinger(i)) == 0 {
+			p = p.Successor()
+		}
 		pServer := ChangeServer(p.IP())
 		pServer.UpdateFingerTable(chordServer.node, i)
+		DPrintf("fingerTable: %v", pServer.String())
 	}
 }
 
@@ -100,6 +108,7 @@ func (chordServer *Server) nodeIdToUpdateFinger(i int) []byte {
 
 // Update chordServer's finger if s should be the ith finger
 func (chordServer *Server) UpdateFingerTable(s *Node, i int) {
+	DPrintf("update %v's finger", chordServer.node.id)
 	fingerTable := chordServer.node.fingerTable
 	if betweenLeftInclusive(s.ID(), chordServer.node.ID(), fingerTable[i].id) {
 		fingerTable[i].id = s.ID()
@@ -130,7 +139,7 @@ func (chordServer *Server) FindPredecessor(id []byte) *Node {
 		closerNode := currServer.closestPrecedingFinger(id)
 		currServer = ChangeServer(closerNode.ipAddr)
 	}
-	return &Node{id: currServer.node.id, ipAddr: currServer.node.ipAddr}
+	return currServer.node
 }
 
 // Returns the closest node preceding id: previous node in the circle to id
@@ -195,6 +204,10 @@ func betweenLeftInclusive(target []byte, begin []byte, end []byte) bool {
 	if beginBigInt.Cmp(endBigInt) == -1 {
 		return (targetBigInt.Cmp(beginBigInt) == 1 || targetBigInt.Cmp(beginBigInt) == 0) &&
 			targetBigInt.Cmp(endBigInt) == -1
+	}
+
+	if beginBigInt.Cmp(endBigInt) == 0 {
+		return targetBigInt.Cmp(beginBigInt) == 0
 	}
 
 	// [3, 2) or [0, 0)
