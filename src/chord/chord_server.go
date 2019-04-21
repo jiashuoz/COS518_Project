@@ -50,6 +50,7 @@ func (chordServer *Server) InitFingerTable(existingServer *Server) {
 	ChangeServer(currNode.Predecessor().IP()).node.SetSuccessor(currNode)
 	DPrintf("first finger is: id: %v  ip: %v", currNode.Successor().ID(), currNode.Successor().IP())
 	for i := 1; i < numBits; i++ {
+		DPrintf("initializing %vth finger", i)
 		if betweenLeftInclusive(fingerTable[i].start, currNode.ID(), fingerTable[i-1].id) {
 			DPrintf("%v should be between %v and %v\n",
 				fingerTable[i].start,
@@ -59,11 +60,13 @@ func (chordServer *Server) InitFingerTable(existingServer *Server) {
 			fingerTable[i].ipAddr = fingerTable[i-1].ipAddr
 		} else {
 			DPrintf("else, find successor based on fingerTable")
-			fartherNode := existingServer.FindSuccessor(fingerTable[i+1].start)
+			fartherNode := existingServer.FindSuccessor(fingerTable[i].start)
 			fingerTable[i].id = fartherNode.id
 			fingerTable[i].ipAddr = fartherNode.ipAddr
 		}
 	}
+	DPrintf("Done initializing:\n")
+	DPrintf(chordServer.node.String())
 
 }
 
@@ -76,6 +79,7 @@ func (chordServer *Server) UpdateOthers() {
 		DPrintf("predecessor: %v", p.ID())
 
 		if bytes.Compare(p.ID(), chordServer.node.ID()) == 0 {
+			DPrintf("reached new node itself")
 			return
 		}
 
@@ -84,7 +88,6 @@ func (chordServer *Server) UpdateOthers() {
 		}
 		pServer := ChangeServer(p.IP())
 		pServer.UpdateFingerTable(chordServer.node, i)
-		DPrintf("fingerTable: %v", pServer.String())
 	}
 }
 
@@ -108,15 +111,22 @@ func (chordServer *Server) nodeIdToUpdateFinger(i int) []byte {
 
 // Update chordServer's finger if s should be the ith finger
 func (chordServer *Server) UpdateFingerTable(s *Node, i int) {
+	if bytes.Compare(s.ID(), chordServer.node.ID()) == 0 {
+		DPrintf("reached new node itself")
+		return
+	}
 	DPrintf("update %v's finger", chordServer.node.id)
 	fingerTable := chordServer.node.fingerTable
 	if betweenLeftInclusive(s.ID(), chordServer.node.ID(), fingerTable[i].id) {
+		DPrintf("yes")
 		fingerTable[i].id = s.ID()
 		fingerTable[i].ipAddr = s.IP()
+		DPrintf("fingerTable: %v", chordServer.node.String())
 		p := chordServer.node.Predecessor()
 		pServer := ChangeServer(p.IP())
 		pServer.UpdateFingerTable(s, i)
 	}
+
 }
 
 // LookUp returns the ip addr of the successor node of id
@@ -207,7 +217,7 @@ func betweenLeftInclusive(target []byte, begin []byte, end []byte) bool {
 	}
 
 	if beginBigInt.Cmp(endBigInt) == 0 {
-		return targetBigInt.Cmp(beginBigInt) == 0
+		return true
 	}
 
 	// [3, 2) or [0, 0)
