@@ -1,8 +1,9 @@
 package chord
 
-var Servers = make(map[string]*Server)
+var Servers = make(map[string]*ChordServer)
 
-func ChangeServer(ipAddr string) *Server {
+// rpc simulator
+func ChangeServer(ipAddr string) *ChordServer {
 	return Servers[ipAddr]
 }
 
