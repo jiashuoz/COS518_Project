@@ -1,6 +1,7 @@
 package chord
 
 import (
+	"bytes"
 	"math/big"
 )
 
@@ -20,7 +21,47 @@ func addBytesInt64(numberInBytes []byte, addend int64) []byte {
 	return addend1.Add(addend1, addend2).Bytes()
 }
 
+func addIDs(x, y []byte) []byte {
+	xInt := big.NewInt(0).SetBytes(x)
+	yInt := big.NewInt(0).SetBytes(y)
+
+	xInt.Add(xInt, yInt)
+	return xInt.Bytes()
+}
+
 func addBytesBigint(numberInBytes []byte, addend *big.Int) []byte {
 	addend1 := big.NewInt(0).SetBytes(numberInBytes)
 	return addend.Add(addend, addend1).Bytes()
+}
+
+func idsEqual(x, y []byte) bool {
+	return bytes.Equal(x, y)
+}
+
+// Returns true if x is between lo and hi
+func between(id []byte, lo []byte, hi []byte) bool {
+	idInt := big.NewInt(0).SetBytes(id)
+	loInt := big.NewInt(0).SetBytes(lo)
+	hiInt := big.NewInt(0).SetBytes(hi)
+
+	switch loInt.Cmp(hiInt) {
+	case -1: // lo < hi
+		return (idInt.Cmp(loInt) == 1) && (idInt.Cmp(hiInt) == -1)
+	case 1: // lo > hi
+		return (idInt.Cmp(loInt) > 0) || (idInt.Cmp(hiInt) < 0)
+	case 0: // lo == hi
+		return idInt.Cmp(loInt) != 0
+	}
+
+	// (2, 3)
+	return false
+}
+
+// Returns true if begin <= target < end, in the ring
+func betweenLeftInclusive(id []byte, lo []byte, hi []byte) bool {
+	return between(id, lo, hi) || bytes.Equal(id, lo)
+}
+
+func betweenRightInclusive(id []byte, lo []byte, hi []byte) bool {
+	return between(id, lo, hi) || bytes.Equal(id, hi)
 }
