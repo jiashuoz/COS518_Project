@@ -14,12 +14,6 @@ type Node struct {
 	predecessor *Node          // previous node on the identifier circle
 }
 
-// NodeInfo contains some basic information about a node
-type NodeInfo struct {
-	id     []byte // id of the node, sha1 generated 160 bit id (20 bytes)
-	ipAddr string // ip address of the node
-}
-
 // FingerEntry in fingerTable
 type FingerEntry struct {
 	start  []byte // start == (n + 2^k-1) mod 2^m, 1 <= k <= m
@@ -34,31 +28,18 @@ func MakeNode(ipAddr string) *Node {
 	n.ipAddr = ipAddr
 	n.id = hash(ipAddr)
 	n.fingerTable = make([]*FingerEntry, numBits)
+	idInt := big.NewInt(0).SetBytes(n.id)
 
 	for i := range n.fingerTable {
+		iInt := big.NewInt(int64(i))
 		n.fingerTable[i] = &FingerEntry{}
 		// n.id + 2^i
-		n.fingerTable[i].start = fingerStart(n.id, i)
-		DPrintf("start: %d\n", n.fingerTable[i].start)
+		n.fingerTable[i].start = addBytesBigint(n.id, big.NewInt(0).Exp(big.NewInt(2), iInt, nil))
+		DPrintf("start: %d\n", big.NewInt(0).Exp(idInt, iInt, nil).Bytes())
 	}
 	n.predecessor = nil // initially, no predecessor
 
 	return &n
-}
-
-func fingerStart(id []byte, i int) []byte {
-	nodeID := new(big.Int).SetBytes(id)                                  // id
-	addend := new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(i)), nil) // 2^i
-
-	nodeID.Add(nodeID, addend)
-	maxVal := new(big.Int).Exp(big.NewInt(2), big.NewInt(numBits), nil)
-
-	nodeID.Mod(nodeID, maxVal)
-
-	if nodeID.Cmp(big.NewInt(0)) == 0 {
-		return []byte{0}
-	}
-	return nodeID.Bytes()
 }
 
 // MakeNodeInfo creates a new NodeInfo give id and ipAddr and returns a pointer to it
@@ -137,8 +118,9 @@ func hash(ipAddr string) []byte {
 	idBigInt := big.NewInt(0)
 	idBigInt.SetBytes(h.Sum(nil)) // Sum() returns []byte, convert it into BigInt
 
-	maxVal := new(big.Int).Exp(big.NewInt(2), big.NewInt(numBits), nil)
-	idBigInt.Mod(idBigInt, maxVal) // mod id to make it to be [0, 2^m - 1]
+	maxVal := big.NewInt(0)
+	maxVal.Exp(big.NewInt(2), big.NewInt(numBits), nil) // calculate 2^m
+	idBigInt.Mod(idBigInt, maxVal)                      // mod id to make it to be [0, 2^m - 1]
 	if idBigInt.Cmp(big.NewInt(0)) == 0 {
 		return []byte{0}
 	}

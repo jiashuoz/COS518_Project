@@ -5,15 +5,15 @@ import (
 	"math/big"
 )
 
-// Server is a single ChordServer
-type Server struct {
+// ChordServer is a single ChordServer
+type ChordServer struct {
 	name string
 	node *Node
 }
 
 // MakeServer returns a pointer to a  server
-func MakeServer(ip string) *Server {
-	server := &Server{
+func MakeServer(ip string) *ChordServer {
+	server := &ChordServer{
 		name: "server 1",
 		node: MakeNode(ip),
 	}
@@ -21,7 +21,7 @@ func MakeServer(ip string) *Server {
 }
 
 // Join adds chordServer to the network
-func (chordServer *Server) Join(exisitingServer *Server) {
+func (chordServer *ChordServer) Join(exisitingServer *ChordServer) {
 	if exisitingServer == nil { // the only node in the network
 		for _, entry := range chordServer.node.FingerTable() {
 			entry.id = chordServer.node.ID()
@@ -34,7 +34,7 @@ func (chordServer *Server) Join(exisitingServer *Server) {
 	}
 }
 
-func (chordServer *Server) InitFingerTable(existingServer *Server) {
+func (chordServer *ChordServer) InitFingerTable(existingServer *ChordServer) {
 	DPrintf("Node%v: Start Initializing Finger Table...", chordServer.node.ID())
 	currNode := chordServer.node
 	fingerTable := currNode.FingerTable()
@@ -71,7 +71,7 @@ func (chordServer *Server) InitFingerTable(existingServer *Server) {
 }
 
 // Update all nodes whose finger tables should refer to chordServer
-func (chordServer *Server) UpdateOthers() {
+func (chordServer *ChordServer) UpdateOthers() {
 	for i := 0; i < numBits; i++ {
 		// p = find_predecessor(n - 2^i)
 		DPrintf("n-2^i = %v", chordServer.nodeIdToUpdateFinger(i))
@@ -92,7 +92,7 @@ func (chordServer *Server) UpdateOthers() {
 }
 
 // Returns the id of node whose ith finger might be chordServer
-func (chordServer *Server) nodeIdToUpdateFinger(i int) []byte {
+func (chordServer *ChordServer) nodeIdToUpdateFinger(i int) []byte {
 	n := new(big.Int).SetBytes(chordServer.node.ID())
 	offset := new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(i)), nil)
 	diff := new(big.Int).Sub(n, offset)
@@ -110,7 +110,7 @@ func (chordServer *Server) nodeIdToUpdateFinger(i int) []byte {
 }
 
 // Update chordServer's finger if s should be the ith finger
-func (chordServer *Server) UpdateFingerTable(s *Node, i int) {
+func (chordServer *ChordServer) UpdateFingerTable(s *Node, i int) {
 	if bytes.Compare(s.ID(), chordServer.node.ID()) == 0 {
 		DPrintf("reached new node itself")
 		return
@@ -130,20 +130,20 @@ func (chordServer *Server) UpdateFingerTable(s *Node, i int) {
 }
 
 // LookUp returns the ip addr of the successor node of id
-func (chordServer *Server) LookUp(id []byte) string {
+func (chordServer *ChordServer) LookUp(id []byte) string {
 	ipAddr := chordServer.FindSuccessor(id).ipAddr
 	DPrintf("lookup result: " + ipAddr)
 	return ipAddr
 }
 
 // FindSuccessor returns the successor node of id
-func (chordServer *Server) FindSuccessor(id []byte) *Node {
+func (chordServer *ChordServer) FindSuccessor(id []byte) *Node {
 	predecessor := chordServer.FindPredecessor(id)
 	return Servers[predecessor.ipAddr].node.Successor()
 }
 
 // FindPredecessor returns the previous node in the circle to id
-func (chordServer *Server) FindPredecessor(id []byte) *Node {
+func (chordServer *ChordServer) FindPredecessor(id []byte) *Node {
 	currServer := chordServer
 	for !betweenRightInclusive(id, currServer.node.id, currServer.node.Successor().id) {
 		closerNode := currServer.closestPrecedingFinger(id)
@@ -153,7 +153,7 @@ func (chordServer *Server) FindPredecessor(id []byte) *Node {
 }
 
 // Returns the closest node preceding id: previous node in the circle to id
-func (chordServer *Server) closestPrecedingFinger(id []byte) *Node {
+func (chordServer *ChordServer) closestPrecedingFinger(id []byte) *Node {
 	// slice contains pointers to TableEntry
 	fingerTable := chordServer.node.FingerTable()
 	currID := chordServer.node.ID()
@@ -168,9 +168,9 @@ func (chordServer *Server) closestPrecedingFinger(id []byte) *Node {
 	return nil
 }
 
-func (chordServer *Server) String() string {
+func (chordServer *ChordServer) String() string {
 	// str := "server name: " + chordServer.name + "\n"
-	str := "Server IP: " + chordServer.node.ipAddr + "\n"
+	str := "ChordServer IP: " + chordServer.node.ipAddr + "\n"
 	str += chordServer.node.String() + "\n"
 	return str
 }
