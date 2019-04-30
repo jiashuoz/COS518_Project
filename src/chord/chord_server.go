@@ -1,8 +1,10 @@
 package chord
 
 import (
+	"bytes"
 	"fmt"
 	"math/big"
+	"math/rand"
 )
 
 // "fmt"
@@ -64,6 +66,37 @@ func (chord *ChordServer) GetNode() Node {
 // GetID return's ch's identifier.
 func (chord *ChordServer) GetID() []byte {
 	return chord.node.ID
+}
+
+// node thinks it might be chord's predecessor.
+func (chord *ChordServer) Notify(node Node) error {
+	//TODO: lock here since it is changing chordServer property
+	// notify itself
+	if bytes.Equal(chord.node.ID, node.ID) {
+		return nil
+	}
+	// node is the only node in the ring
+	if bytes.Equal(chord.node.ID, chord.predecessor.ID) {
+		chord.predecessor = node
+		chord.fingerTable[0] = node
+	} else if betweenRightInclusive(node.ID, chord.predecessor.ID, chord.node.ID) {
+		chord.predecessor = node
+	}
+	return nil
+}
+
+func (chord *ChordServer) fingerStart(i int) []byte {
+	currID := new(big.Int).SetBytes(chord.node.ID)
+	offset := new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(i)), nil)
+	start := new(big.Int).Add(currID, offset)
+	return start.Bytes()
+}
+
+// periodically fresh finger table entries
+func (chord *ChordServer) fixFingers() {
+	i := rand.Intn(numBits-1) + 1
+	fingerStart := chord.fingerStart(i)
+	chord.fingerTable[i] = chord.FindSuccessor(fingerStart)
 }
 
 // // Join adds chordServer to the network
@@ -188,8 +221,8 @@ func (chord *ChordServer) GetID() []byte {
 // 	return Servers[predecessor.ipAddr].node.Successor()
 // }
 
-func (chordServer *ChordServer) String(printFingerTable bool) string {
-	str := chordServer.node.String()
+func (chord *ChordServer) String(printFingerTable bool) string {
+	str := chord.node.String()
 	if !printFingerTable {
 		return str
 	}
@@ -197,10 +230,10 @@ func (chordServer *ChordServer) String(printFingerTable bool) string {
 	str += "Finger table: \n"
 	str += "ith | start | successor\n"
 	for i := 0; i < numBits; i++ {
-		currID := new(big.Int).SetBytes(chordServer.node.ID)
+		currID := new(big.Int).SetBytes(chord.node.ID)
 		offset := new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(i)), nil)
 		start := new(big.Int).Add(currID, offset)
-		successor := chordServer.fingerTable[i].ID
+		successor := chord.fingerTable[i].ID
 		str += fmt.Sprintf("%d   | %d     | %d\n", i, start, successor)
 	}
 	return str

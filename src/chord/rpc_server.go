@@ -19,6 +19,8 @@ type RPC struct {
 
 // StartRPC creates an RPCServer listening on given port.
 func StartRPC(chord *ChordServer, port int) (*RPC, error) {
+
+	//TODO: change it so in the future it can switch to a different port
 	return run(chord)
 }
 
