@@ -64,6 +64,7 @@ func (node *Node) FindClosestNodeRPC(id []byte) (Node, error) {
 
 	args := FindClosestNodeArgs{}
 	var reply FindClosestNodeReply
+	args.ID = id
 	err = client.Call("RPC.FindClosestNode", args, &reply)
 	if err != nil {
 		checkError(err)

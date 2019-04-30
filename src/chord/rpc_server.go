@@ -89,10 +89,10 @@ type FindClosestNodeReply struct {
 // FindClosestNode is an RPC call, calls underlying equivalent function,
 // finds the closest node to Id from the Chord instance on this server.
 func (rpcServer *RPC) FindClosestNode(args *FindClosestNodeArgs, reply *FindClosestNodeReply) error {
-
+	DPrintf("server id(%d) received FindClosestNode RPC call", rpcServer.chord.GetID())
 	tempN := rpcServer.chord.FindClosestNode(args.ID)
 	reply.N = tempN
-
+	DPrintf("server id(%d) RPC result is: "+tempN.String(), rpcServer.chord.GetID())
 	return nil
 }
 

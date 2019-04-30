@@ -5,14 +5,6 @@ import (
 	"math/big"
 )
 
-// intToBytes takes a int64 and convert it to []byte, big endian
-func intToBytes(x int64) []byte {
-	if x == 0 {
-		return []byte{0}
-	}
-	return big.NewInt(x).Bytes()
-}
-
 // add takes one number in bytes and second number in int64, return the result in bytes
 // does not work with negative numbers
 func addBytesInt64(numberInBytes []byte, addend int64) []byte {
@@ -22,6 +14,9 @@ func addBytesInt64(numberInBytes []byte, addend int64) []byte {
 }
 
 func addIDs(x, y []byte) []byte {
+	if len(x) == 0 || len(y) == 0 {
+		panic("empty byte array")
+	}
 	xInt := big.NewInt(0).SetBytes(x)
 	yInt := big.NewInt(0).SetBytes(y)
 
@@ -30,6 +25,9 @@ func addIDs(x, y []byte) []byte {
 }
 
 func addBytesBigint(numberInBytes []byte, addend *big.Int) []byte {
+	if len(numberInBytes) == 0 {
+		panic("empty byte array")
+	}
 	addend1 := big.NewInt(0).SetBytes(numberInBytes)
 	return addend.Add(addend, addend1).Bytes()
 }
@@ -40,6 +38,9 @@ func idsEqual(x, y []byte) bool {
 
 // Returns true if x is between lo and hi
 func between(id []byte, lo []byte, hi []byte) bool {
+	if len(id) == 0 || len(lo) == 0 || len(hi) == 0 {
+		panic("empty byte array")
+	}
 	idInt := big.NewInt(0).SetBytes(id)
 	loInt := big.NewInt(0).SetBytes(lo)
 	hiInt := big.NewInt(0).SetBytes(hi)
@@ -59,10 +60,16 @@ func between(id []byte, lo []byte, hi []byte) bool {
 
 // Returns true if begin <= target < end, in the ring
 func betweenLeftInclusive(id []byte, lo []byte, hi []byte) bool {
+	if len(id) == 0 || len(lo) == 0 || len(hi) == 0 {
+		panic("empty byte array")
+	}
 	return between(id, lo, hi) || bytes.Equal(id, lo)
 }
 
 func betweenRightInclusive(id []byte, lo []byte, hi []byte) bool {
+	if len(id) == 0 || len(lo) == 0 || len(hi) == 0 {
+		panic("empty byte array")
+	}
 	return between(id, lo, hi) || bytes.Equal(id, hi)
 }
 
