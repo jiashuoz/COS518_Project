@@ -24,8 +24,8 @@ func StartRPC(chord *ChordServer, port int) (*RPC, error) {
 	return run(chord)
 }
 
-func (rpcHandler *RPC) getAddr() net.Addr {
-	return rpcHandler.listener.Addr()
+func (rpcServer *RPC) getAddr() net.Addr {
+	return rpcServer.listener.Addr()
 }
 
 // Local start method with more control over address server listens on. Used
@@ -89,13 +89,9 @@ type FindClosestNodeReply struct {
 // FindClosestNode is an RPC call, calls underlying equivalent function,
 // finds the closest node to Id from the Chord instance on this server.
 func (rpcServer *RPC) FindClosestNode(args *FindClosestNodeArgs, reply *FindClosestNodeReply) error {
-	DPrintf("chord [%s]: FindClosestNode (%016x)", rpcServer.chord.GetID(), args.ID)
 
 	tempN := rpcServer.chord.FindClosestNode(args.ID)
 	reply.N = tempN
-
-	DPrintf("ch [%s]: FindClosestNode (%016x): secceeded: %s",
-		rpcServer.chord.node.String(), args.ID, tempN.String())
 
 	return nil
 }

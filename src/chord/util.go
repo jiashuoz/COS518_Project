@@ -1,8 +1,9 @@
 package chord
 
 import "log"
-import "fmt"
-import "os"
+
+// import "fmt"
+// import "os"
 
 // Debug is enabled if set to 1
 const Debug = 1
@@ -17,6 +18,7 @@ func DPrintf(format string, a ...interface{}) (n int, err error) {
 
 func checkError(err error) {
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "%s\n", err.Error())
+		log.Fatal(err)
+		// fmt.Fprintf(os.Stderr, "%s\n", err.Error())
 	}
 }

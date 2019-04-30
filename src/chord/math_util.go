@@ -65,3 +65,10 @@ func betweenLeftInclusive(id []byte, lo []byte, hi []byte) bool {
 func betweenRightInclusive(id []byte, lo []byte, hi []byte) bool {
 	return between(id, lo, hi) || bytes.Equal(id, hi)
 }
+
+func intToByteArray(i int) []byte {
+	if i == 0 {
+		return []byte{0}
+	}
+	return big.NewInt(int64(i)).Bytes()
+}

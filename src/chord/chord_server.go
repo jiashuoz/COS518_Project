@@ -28,13 +28,14 @@ func MakeServer(ip string) *ChordServer {
 
 func (chord *ChordServer) FindSuccessor(id []byte) Node {
 	pred := chord.FindPredecessor(id)
+	DPrintf("pred: %d", pred.ID)
 	predSucc, _ := pred.GetSuccessorRPC()
 	return predSucc
 }
 
 func (chord *ChordServer) FindPredecessor(id []byte) Node {
 	closest := chord.FindClosestNode(id)
-
+	DPrintf("closest: %d", closest.ID)
 	if idsEqual(closest.ID, chord.node.ID) {
 		return closest
 	}
@@ -44,6 +45,7 @@ func (chord *ChordServer) FindPredecessor(id []byte) Node {
 	for !betweenRightInclusive(id, closest.ID, closestSucc.ID) {
 		closest, _ := closest.FindClosestNodeRPC(id)
 		closestSucc, _ = closest.GetSuccessorRPC()
+		DPrintf("closest: %d", closest.ID)
 	}
 	return closest
 }
@@ -55,7 +57,7 @@ func (chord *ChordServer) FindClosestNode(id []byte) Node {
 			return fingerTable[i]
 		}
 	}
-	return fingerTable[numBits-1]
+	return chord.node
 }
 
 // GetNode returns ch's network information.

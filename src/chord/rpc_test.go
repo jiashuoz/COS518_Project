@@ -3,7 +3,6 @@ package chord
 import (
 	"bytes"
 	"fmt"
-	"math/big"
 	"testing"
 )
 
@@ -35,8 +34,8 @@ func TestGetSuccessor(t *testing.T) {
 	server1 := MakeServer("127.0.0.1:11190") // id 1
 	server3 := MakeServer("127.0.0.1:10000") // id 3
 
-	node1 := MakeNode("127.0.0.1:11190")
 	node0 := MakeNode("127.0.0.1:8888")
+	node1 := MakeNode("127.0.0.1:11190")
 	node3 := MakeNode("127.0.0.1:10000")
 
 	server0.fingerTable[0] = node1
@@ -59,29 +58,63 @@ func TestGetSuccessor(t *testing.T) {
 	fmt.Println(server1.String(true))
 	fmt.Println(server3.String(true))
 
-	test1 := server0.FindSuccessor(big.NewInt(3).Bytes())
-	if !bytes.Equal(test1.ID, big.NewInt(3).Bytes()) {
-		t.Errorf("Find successor for key 3 = %d; want 3", test1.ID)
+	// ba = byte array
+	// ba0 := intToByteArray(0)
+	// ba1 := intToByteArray(1)
+	ba2 := intToByteArray(2)
+	// ba3 := intToByteArray(3)
+	// ba4 := intToByteArray(4)
+	// ba5 := intToByteArray(5)
+	// ba6 := intToByteArray(6)
+	// ba7 := intToByteArray(7)
+
+	// key0Succ := server0.FindSuccessor(ba0)
+	// if !bytes.Equal(key0Succ.ID, intToByteArray(0)) {
+	// 	t.Errorf("Find successor from node %d got = %d; want 0", server0.GetID(), key0Succ.ID)
+	// }
+
+	// key0Succ = server1.FindSuccessor(ba0)
+	// if !bytes.Equal(key0Succ.ID, intToByteArray(0)) {
+	// 	t.Errorf("Find successor from node %d got = %d; want 0", server1.GetID(), key0Succ.ID)
+	// }
+
+	// key0Succ = server3.FindSuccessor(ba0)
+	// if !bytes.Equal(key0Succ.ID, intToByteArray(0)) {
+	// 	t.Errorf("Find successor from node %d got = %d; want 0", server3.GetID(), key0Succ.ID)
+	// }
+
+	// key1Succ := server0.FindSuccessor(ba1)
+	// if !bytes.Equal(key1Succ.ID, intToByteArray(1)) {
+	// 	t.Errorf("Find successor from node %d got = %d; want 1", server0.GetID(), key1Succ.ID)
+	// }
+
+	// key1Succ = server1.FindSuccessor(ba1)
+	// if !bytes.Equal(key1Succ.ID, intToByteArray(1)) {
+	// 	t.Errorf("Find successor from node %d got = %d; want 1", server1.GetID(), key1Succ.ID)
+	// }
+
+	// key1Succ = server3.FindSuccessor(ba1)
+	// if !bytes.Equal(key1Succ.ID, intToByteArray(1)) {
+	// 	t.Errorf("Find successor from node %d got = %d; want 1", server3.GetID(), key1Succ.ID)
+	// }
+
+	// key2Succ := server0.FindSuccessor(ba2)
+	// if !bytes.Equal(key2Succ.ID, intToByteArray(3)) {
+	// 	t.Errorf("Find successor from node %d got = %d; want 3", server0.GetID(), key2Succ.ID)
+	// }
+
+	// key2Succ = server1.FindSuccessor(ba2)
+	// if !bytes.Equal(key2Succ.ID, intToByteArray(3)) {
+	// 	t.Errorf("Find successor from node %d got = %d; want 3", server1.GetID(), key2Succ.ID)
+	// }
+
+	key2Succ := server3.FindSuccessor(ba2)
+	if !bytes.Equal(key2Succ.ID, intToByteArray(3)) {
+		t.Errorf("Find successor from node %d got = %d; want 3", server3.GetID(), key2Succ.ID)
 	}
 
-	test2 := server0.FindSuccessor(big.NewInt(1).Bytes())
-	if !bytes.Equal(test2.ID, big.NewInt(1).Bytes()) {
-		t.Errorf("Find successor for key 1 = %d; want 1", test2.ID)
-	}
-
-	test3 := server0.FindSuccessor(big.NewInt(5).Bytes())
-	if !bytes.Equal(test3.ID, []byte{0}) {
-		t.Errorf("Find successor for key 5 = %d; want 0", test3.ID)
-	}
-
-	test4 := server0.FindSuccessor(big.NewInt(7).Bytes())
-	if !bytes.Equal(test4.ID, []byte{0}) {
-		t.Errorf("Find successor for key 7 = %d; want 0", test4.ID)
-	}
-
-	test5 := server0.FindSuccessor(big.NewInt(2).Bytes())
-	if !bytes.Equal(test5.ID, big.NewInt(3).Bytes()) {
-		t.Errorf("Find successor for key 2 = %d; want 3", test5.ID)
-	}
-
+	// key0Succ = server3.FindSuccessor(ba1)
+	// if !bytes.Equal(key0Succ.ID, intToByteArray(1)) {
+	// 	t.Errorf("Find successor from node %d got = %d; want 0", server3.GetID(), key1Succ.ID)
+	// }
 }
