@@ -19,9 +19,9 @@ func TestRunRPC(t *testing.T) {
 	// TODO: manually populate the finger tables of three servers...
 
 	// Initialize RPC servers on top of chord servers
-	rpcServer0, _ := run(server0, "127.0.0.1:8888")
-	rpcServer1, _ := run(server1, "127.0.0.1:11190")
-	rpcServer3, _ := run(server3, "127.0.0.1:10000")
+	rpcServer0, _ := run(server0)
+	rpcServer1, _ := run(server1)
+	rpcServer3, _ := run(server3)
 
 	fmt.Println(rpcServer0.getAddr())
 	fmt.Println(rpcServer1.getAddr())
@@ -51,9 +51,9 @@ func TestGetSuccessor(t *testing.T) {
 	server3.fingerTable[1] = node0
 	server3.fingerTable[2] = node0
 
-	run(server0, "127.0.0.1:8888")
-	run(server1, "127.0.0.1:11190")
-	run(server3, "127.0.0.1:10000")
+	run(server0)
+	run(server1)
+	run(server3)
 
 	fmt.Println(server0.String(true))
 	fmt.Println(server1.String(true))
@@ -70,12 +70,12 @@ func TestGetSuccessor(t *testing.T) {
 	}
 
 	test3 := server0.FindSuccessor(big.NewInt(5).Bytes())
-	if !bytes.Equal(test3.ID, big.NewInt(0).Bytes()) {
+	if !bytes.Equal(test3.ID, []byte{0}) {
 		t.Errorf("Find successor for key 5 = %d; want 0", test3.ID)
 	}
 
 	test4 := server0.FindSuccessor(big.NewInt(7).Bytes())
-	if !bytes.Equal(test4.ID, big.NewInt(0).Bytes()) {
+	if !bytes.Equal(test4.ID, []byte{0}) {
 		t.Errorf("Find successor for key 7 = %d; want 0", test4.ID)
 	}
 

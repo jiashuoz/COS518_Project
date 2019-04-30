@@ -19,7 +19,7 @@ type RPC struct {
 
 // StartRPC creates an RPCServer listening on given port.
 func StartRPC(chord *ChordServer, port int) (*RPC, error) {
-	return run(chord, fmt.Sprintf(":%d", port))
+	return run(chord)
 }
 
 func (rpcHandler *RPC) getAddr() net.Addr {
@@ -28,7 +28,7 @@ func (rpcHandler *RPC) getAddr() net.Addr {
 
 // Local start method with more control over address server listens on. Used
 // for testing.
-func run(chord *ChordServer, ip string) (*RPC, error) {
+func run(chord *ChordServer) (*RPC, error) {
 	rpcServer := &RPC{}
 	rpcServer.chord = chord
 	// rpcs.errChan = make(chan error, 1)
@@ -39,7 +39,7 @@ func run(chord *ChordServer, ip string) (*RPC, error) {
 		return nil, fmt.Errorf("rpc registration failed: %s", err)
 	}
 
-	rpcServer.listener, err = net.Listen("tcp", ip)
+	rpcServer.listener, err = net.Listen("tcp", chord.node.IP)
 	if err != nil {
 		return nil, err
 	}
