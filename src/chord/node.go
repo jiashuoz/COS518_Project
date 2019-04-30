@@ -21,7 +21,7 @@ func MakeNode(ipAddr string) Node {
 
 // String returns string representation of n.
 func (n *Node) String() string {
-	return fmt.Sprintf("%s:%d", n.IP, n.ID)
+	return fmt.Sprintf("Server IP: %s, ID: %d\n", n.IP, n.ID)
 }
 
 // // Returns the hash value in []byte based an ipAddr

@@ -22,6 +22,10 @@ func StartRPC(chord *ChordServer, port int) (*RPC, error) {
 	return run(chord, fmt.Sprintf(":%d", port))
 }
 
+func (rpcHandler *RPC) getAddr() net.Addr {
+	return rpcHandler.listener.Addr()
+}
+
 // Local start method with more control over address server listens on. Used
 // for testing.
 func run(chord *ChordServer, ip string) (*RPC, error) {
@@ -68,10 +72,6 @@ type FindSuccessorReply struct{ N Node }
 func (rpcServer *RPC) FindSuccessor(args *FindSuccessorArgs, reply *FindSuccessorReply) error {
 	reply.N = rpcServer.chord.FindSuccessor(args.id)
 	return nil
-}
-
-func (rpcHandler *RPC) getAddr() net.Addr {
-	return rpcHandler.listener.Addr()
 }
 
 // FindClosestNodeArgs holds arguments for FindClosestNode.

@@ -1,10 +1,13 @@
 package chord
 
 import (
+	"fmt"
+	"math/big"
+)
+
 // "fmt"
 // "bytes"
 // "math/big"
-)
 
 // ChordServer is a single ChordServer
 type ChordServer struct {
@@ -115,23 +118,23 @@ func (chord *ChordServer) GetID() []byte {
 
 // // Update all nodes whose finger tables should refer to chordServer
 // func (chordServer *ChordServer) UpdateOthers() {
-// 	for i := 0; i < numBits; i++ {
-// 		// p = find_predecessor(n - 2^i)
-// 		DPrintf("n-2^i = %v", chordServer.nodeIdToUpdateFinger(i))
-// 		p := chordServer.FindPredecessor(chordServer.nodeIdToUpdateFinger(i))
-// 		DPrintf("predecessor: %v", p.ID())
+// for i := 0; i < numBits; i++ {
+// 	// p = find_predecessor(n - 2^i)
+// 	DPrintf("n-2^i = %v", chordServer.nodeIdToUpdateFinger(i))
+// 	p := chordServer.FindPredecessor(chordServer.nodeIdToUpdateFinger(i))
+// 	DPrintf("predecessor: %v", p.ID())
 
-// 		if bytes.Compare(p.ID(), chordServer.node.ID()) == 0 {
-// 			DPrintf("reached new node itself")
-// 			return
-// 		}
-
-// 		if bytes.Compare(p.Successor().ID(), chordServer.nodeIdToUpdateFinger(i)) == 0 {
-// 			p = p.Successor()
-// 		}
-// 		pServer := ChangeServer(p.IP())
-// 		pServer.UpdateFingerTable(chordServer.node, i)
+// 	if bytes.Compare(p.ID(), chordServer.node.ID()) == 0 {
+// 		DPrintf("reached new node itself")
+// 		return
 // 	}
+
+// 	if bytes.Compare(p.Successor().ID(), chordServer.nodeIdToUpdateFinger(i)) == 0 {
+// 		p = p.Successor()
+// 	}
+// 	pServer := ChangeServer(p.IP())
+// 	pServer.UpdateFingerTable(chordServer.node, i)
+// }
 // }
 
 // // Returns the id of node whose ith finger might be chordServer
@@ -185,9 +188,20 @@ func (chord *ChordServer) GetID() []byte {
 // 	return Servers[predecessor.ipAddr].node.Successor()
 // }
 
-// func (chordServer *ChordServer) String() string {
-// 	// str := "server name: " + chordServer.name + "\n"
-// 	str := "ChordServer IP: " + chordServer.node.ipAddr + "\n"
-// 	str += chordServer.node.String() + "\n"
-// 	return str
-// }
+func (chordServer *ChordServer) String(displayFingerTable bool) string {
+	str := chordServer.node.String()
+	if !displayFingerTable {
+		return str
+	}
+
+	str += "Finger table: \n"
+	str += "ith | start | successor\n"
+	for i := 0; i < numBits; i++ {
+		currID := new(big.Int).SetBytes(chordServer.node.ID)
+		offset := new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(i)), nil)
+		start := new(big.Int).Add(currID, offset)
+		successor := chordServer.fingerTable[i].ID
+		str += fmt.Sprintf("%d   | %d     | %d\n", i, start, successor)
+	}
+	return str
+}
