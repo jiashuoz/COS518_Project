@@ -188,9 +188,9 @@ func (chord *ChordServer) GetID() []byte {
 // 	return Servers[predecessor.ipAddr].node.Successor()
 // }
 
-func (chordServer *ChordServer) String(displayFingerTable bool) string {
+func (chordServer *ChordServer) String(printFingerTable bool) string {
 	str := chordServer.node.String()
-	if !displayFingerTable {
+	if !printFingerTable {
 		return str
 	}
 
