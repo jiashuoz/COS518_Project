@@ -30,32 +30,41 @@ func TestRunRPC(t *testing.T) {
 }
 
 func TestGetSuccessor(t *testing.T) {
-	server0 := MakeServer("127.0.0.1:8888")  // id 0
-	server1 := MakeServer("127.0.0.1:11190") // id 1
-	server3 := MakeServer("127.0.0.1:10000") // id 3
+	testAddrs := reverseHash(numBits, "127.0.0.1", 5000)
+	server0 := MakeServer(testAddrs[0]) // id 0
+	server1 := MakeServer(testAddrs[1]) // id 1
+	server2 := MakeServer(testAddrs[2]) // id 2
+	server3 := MakeServer(testAddrs[3]) // id 3
 
-	node0 := MakeNode("127.0.0.1:8888")
-	node1 := MakeNode("127.0.0.1:11190")
-	node3 := MakeNode("127.0.0.1:10000")
+	node0 := MakeNode(testAddrs[0])
+	node1 := MakeNode(testAddrs[1])
+	node2 := MakeNode(testAddrs[2])
+	node3 := MakeNode(testAddrs[3])
 
 	server0.fingerTable[0] = node1
-	server0.fingerTable[1] = node3
+	server0.fingerTable[1] = node2
 	server0.fingerTable[2] = node0
 
-	server1.fingerTable[0] = node3
+	server1.fingerTable[0] = node2
 	server1.fingerTable[1] = node3
 	server1.fingerTable[2] = node0
+
+	server2.fingerTable[0] = node3
+	server2.fingerTable[1] = node0
+	server2.fingerTable[2] = node0
 
 	server3.fingerTable[0] = node0
 	server3.fingerTable[1] = node0
 	server3.fingerTable[2] = node0
 
 	run(server0)
+	run(server2)
 	run(server1)
 	run(server3)
 
 	fmt.Println(server0.String(true))
 	fmt.Println(server1.String(true))
+	fmt.Println(server2.String(true))
 	fmt.Println(server3.String(true))
 
 	// ba = byte array
@@ -102,18 +111,18 @@ func TestGetSuccessor(t *testing.T) {
 
 	// FindSuccessor of key 2, call three servers, result should always be 3
 	key2Succ := server0.FindSuccessor(ba2)
-	if !bytes.Equal(key2Succ.ID, intToByteArray(3)) {
-		t.Errorf("Find successor from node %d got = %d; want 3", server0.GetID(), key2Succ.ID)
+	if !bytes.Equal(key2Succ.ID, intToByteArray(2)) {
+		t.Errorf("Find successor from node %d got = %d; want 2", server0.GetID(), key2Succ.ID)
 	}
 
 	key2Succ = server1.FindSuccessor(ba2)
-	if !bytes.Equal(key2Succ.ID, intToByteArray(3)) {
-		t.Errorf("Find successor from node %d got = %d; want 3", server1.GetID(), key2Succ.ID)
+	if !bytes.Equal(key2Succ.ID, intToByteArray(2)) {
+		t.Errorf("Find successor from node %d got = %d; want 2", server1.GetID(), key2Succ.ID)
 	}
 
 	key2Succ = server3.FindSuccessor(ba2)
-	if !bytes.Equal(key2Succ.ID, intToByteArray(3)) {
-		t.Errorf("Find successor from node %d got = %d; want 3", server3.GetID(), key2Succ.ID)
+	if !bytes.Equal(key2Succ.ID, intToByteArray(2)) {
+		t.Errorf("Find successor from node %d got = %d; want 2", server3.GetID(), key2Succ.ID)
 	}
 
 	// FindSuccessor of key 3, call three servers, result should always be 3
@@ -153,6 +162,8 @@ func TestGetSuccessor(t *testing.T) {
 	if !bytes.Equal(key5Succ.ID, intToByteArray(0)) {
 		t.Errorf("Find successor from node %d got = %d; want 0", server0.GetID(), key5Succ.ID)
 	}
+
+	DPrintf("Tracer: %s", server0.tracer.String())
 
 	key5Succ = server1.FindSuccessor(ba5)
 	if !bytes.Equal(key5Succ.ID, intToByteArray(0)) {

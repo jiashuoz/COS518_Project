@@ -2,6 +2,8 @@ package chord
 
 import (
 	"bytes"
+	"fmt"
+	"math"
 	"math/big"
 )
 
@@ -78,4 +80,19 @@ func intToByteArray(i int) []byte {
 		return []byte{0}
 	}
 	return big.NewInt(int64(i)).Bytes()
+}
+
+func reverseHash(numBits int, ipAddr string, startPortNum int) []string {
+	numNodes := int(math.Pow(2, float64(numBits)))
+	ips := make([]string, numNodes)
+	for i := 0; i < numNodes; startPortNum++ {
+		testAddr := fmt.Sprintf("%s:%d", ipAddr, startPortNum)
+		hashResult := hash(testAddr)
+		if idsEqual(intToByteArray(i), hashResult) {
+			ips[i] = testAddr
+			i++
+		}
+
+	}
+	return ips
 }

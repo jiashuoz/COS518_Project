@@ -16,6 +16,7 @@ type ChordServer struct {
 	node        Node
 	fingerTable []Node // a table of FingerEntry pointer
 	predecessor Node   // previous node on the identifier circle
+	tracer      Tracer //tracer to trace node hops and latency
 }
 
 // MakeServer returns a pointer to a  server
@@ -23,46 +24,52 @@ func MakeServer(ip string) *ChordServer {
 	server := &ChordServer{}
 	server.node = MakeNode(ip)
 	server.fingerTable = make([]Node, numBits)
+	server.tracer = MakeTracer()
 	return server
 }
 
 func (chord *ChordServer) FindSuccessor(id []byte) Node {
+	chord.tracer.startTracer(chord.GetID(), id)
 	pred := chord.FindPredecessor(id)
-	DPrintf("pred: %d", pred.ID)
-	predSucc, _ := pred.GetSuccessorRPC()
-	return predSucc
+	result, _ := pred.GetSuccessorRPC()
+	chord.tracer.endTracer(result.ID)
+	return result
 }
 
 func (chord *ChordServer) FindPredecessor(id []byte) Node {
 	closest := chord.FindClosestNode(id)
-	DPrintf("server %d, FindPredecessor, closest: %d", chord.node.ID, closest.ID)
 	if idsEqual(closest.ID, chord.node.ID) {
 		return closest
 	}
 
 	closestSucc, _ := closest.GetSuccessorRPC()
 
+	chord.tracer.traceNode(closest.ID)
+	// DPrintf("closestSucc: %d", closestSucc.ID)
+
 	for !betweenRightInclusive(id, closest.ID, closestSucc.ID) {
 		closest, _ = closest.FindClosestNodeRPC(id)
 		closestSucc, _ = closest.GetSuccessorRPC()
-		DPrintf("server %d, FindPredecessor, remote closest: %d", chord.node.ID, closest.ID)
+
+		chord.tracer.traceNode(closest.ID)
+		// DPrintf("server %d, FindPredecessor, remote closest: %d", chord.node.ID, closest.ID)
 	}
-	DPrintf("server %d, FindPredecessor, Predecessor is %d", chord.node.ID, closest.ID)
+	// DPrintf("server %d, FindPredecessor, Predecessor is %d", chord.node.ID, closest.ID)
 	return closest
 }
 
 func (chord *ChordServer) FindClosestNode(id []byte) Node {
-	DPrintf("server id(%d) received local FindClosestNode call", chord.GetID())
+	// DPrintf("server id(%d) received local FindClosestNode call", chord.GetID())
 	fingerTable := chord.fingerTable
 	for i := numBits - 1; i >= 0; i-- {
 		if fingerTable[i].ID != nil && between(fingerTable[i].ID, chord.GetID(), id) {
-			DPrintf("%v is between %v and %v", fingerTable[i].ID, chord.GetID(), id)
-			DPrintf("server id(%d) local result is: "+fingerTable[i].String(), chord.GetID())
+			// DPrintf("%v is between %v and %v", fingerTable[i].ID, chord.GetID(), id)
+			// DPrintf("server id(%d) local result is: "+fingerTable[i].String(), chord.GetID())
 			return fingerTable[i]
 		}
 	}
 
-	DPrintf("server id(%d) local FindClosestNode result is: "+chord.node.String(), chord.GetID())
+	// DPrintf("server id(%d) local FindClosestNode result is: "+chord.node.String(), chord.GetID())
 	return chord.node
 }
 
