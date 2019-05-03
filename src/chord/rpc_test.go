@@ -163,8 +163,6 @@ func TestGetSuccessor(t *testing.T) {
 		t.Errorf("Find successor from node %d got = %d; want 0", server0.GetID(), key5Succ.ID)
 	}
 
-	DPrintf("Tracer: %s", server0.tracer.String())
-
 	key5Succ = server1.FindSuccessor(ba5)
 	if !bytes.Equal(key5Succ.ID, intToByteArray(0)) {
 		t.Errorf("Find successor from node %d got = %d; want 0", server1.GetID(), key5Succ.ID)
@@ -206,4 +204,9 @@ func TestGetSuccessor(t *testing.T) {
 	if !bytes.Equal(key7Succ.ID, intToByteArray(0)) {
 		t.Errorf("Find successor from node %d got = %d; want 0", server3.GetID(), key6Succ.ID)
 	}
+
+	DPrintf("Server0:\n %s", server0.tracer.String())
+	DPrintf("Server1:\n %s", server1.tracer.String())
+	DPrintf("Server2:\n %s", server2.tracer.String())
+	DPrintf("Server3:\n %s", server3.tracer.String())
 }
