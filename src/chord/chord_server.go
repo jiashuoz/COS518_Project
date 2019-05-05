@@ -11,10 +11,10 @@ import (
 
 const (
 	// DefaultStabilizeInterval is the interval that this server will start the stabilize process
-	DefaultStabilizeInterval = 1 * time.Second
+	DefaultStabilizeInterval = 300 * time.Millisecond
 
 	// DefaultFixFingerInterval is the interval that this server will repeat fixing its finger table
-	DefaultFixFingerInterval = 1 * time.Second
+	DefaultFixFingerInterval = 300 * time.Millisecond
 )
 
 // ChordServer is a single ChordServer
@@ -44,6 +44,8 @@ func (chord *ChordServer) Start() error {
 	if chord.Running() {
 		return fmt.Errorf("Start() failed: %v already running", chord.GetID())
 	}
+
+	rpcRun(chord) // launch RPC service
 
 	chord.stopChan = make(chan bool)
 	chord.running = true
@@ -176,7 +178,6 @@ func (chord *ChordServer) Stabilize() error {
 	}
 
 	succ = chord.GetSuccessor()
-	DPrintf("%v notifies %v", chord.GetID(), succ.ID)
 	succ.NotifyRPC(chord.GetNode())
 	return nil
 }
@@ -193,7 +194,6 @@ func (chord *ChordServer) Notify(node Node) error {
 	chord.Lock()
 	defer chord.Unlock()
 
-	DPrintf("%v %v %v", node.ID, chord.predecessor.ID, chord.node.ID)
 	// node is the only node in the ring
 	if idsEqual(chord.node.ID, chord.predecessor.ID) {
 		chord.predecessor = node

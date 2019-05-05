@@ -17,20 +17,13 @@ type RPC struct {
 	// errChan     chan error
 }
 
-// StartRPC creates an RPCServer listening on given port.
-func StartRPC(chord *ChordServer, port int) (*RPC, error) {
-
-	//TODO: change it so in the future it can switch to a different port
-	return run(chord)
-}
-
 func (rpcServer *RPC) getAddr() net.Addr {
 	return rpcServer.listener.Addr()
 }
 
 // Local start method with more control over address server listens on. Used
 // for testing.
-func run(chord *ChordServer) (*RPC, error) {
+func rpcRun(chord *ChordServer) (*RPC, error) {
 	rpcServer := &RPC{}
 	rpcServer.chord = chord
 	// rpcs.errChan = make(chan error, 1)

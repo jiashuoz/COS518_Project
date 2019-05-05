@@ -19,13 +19,13 @@ func TestRunRPC(t *testing.T) {
 	// TODO: manually populate the finger tables of three servers...
 
 	// Initialize RPC servers on top of chord servers
-	rpcServer0, _ := run(server0)
-	rpcServer1, _ := run(server1)
-	rpcServer3, _ := run(server3)
+	// rpcServer0, _ := run(server0)
+	// rpcServer1, _ := run(server1)
+	// rpcServer3, _ := run(server3)
 
-	fmt.Println(rpcServer0.getAddr())
-	fmt.Println(rpcServer1.getAddr())
-	fmt.Println(rpcServer3.getAddr())
+	// fmt.Println(rpcServer0.getAddr())
+	// fmt.Println(rpcServer1.getAddr())
+	// fmt.Println(rpcServer3.getAddr())
 
 	// TODO: test RPC functionality
 }
@@ -34,26 +34,22 @@ func TestStablize(t *testing.T) {
 	testAddrs := reverseHash(numBits, "127.0.0.1", 5000)
 	chord0 := MakeServer(testAddrs[0])
 	chord0.Join(Node{})
-	run(chord0)
 	chord0.Start()
 	fmt.Println(chord0.String(true))
 
-	<-time.After(2 * time.Second)
+	// <-time.After(2 * time.Second)
 	chord1 := MakeServer(testAddrs[1])
 	chord1.Join(chord0.GetNode())
-	run(chord1)
 	chord1.Start()
 
-	<-time.After(2 * time.Second)
+	// <-time.After(2 * time.Second)
 	chord3 := MakeServer(testAddrs[3])
 	chord3.Join(chord0.GetNode())
-	run(chord3)
 	chord3.Start()
 
-	<-time.After(2 * time.Second)
+	// <-time.After(2 * time.Second)
 	chord5 := MakeServer(testAddrs[5])
 	chord5.Join(chord0.GetNode())
-	run(chord5)
 	chord5.Start()
 
 	for {
@@ -93,10 +89,10 @@ func TestGetSuccessor(t *testing.T) {
 	server3.fingerTable[1] = node0
 	server3.fingerTable[2] = node0
 
-	run(server0)
-	run(server2)
-	run(server1)
-	run(server3)
+	// run(server0)
+	// run(server2)
+	// run(server1)
+	// run(server3)
 
 	fmt.Println(server0.String(true))
 	fmt.Println(server1.String(true))
