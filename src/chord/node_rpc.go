@@ -17,6 +17,7 @@ func (node *Node) openConn() (*rpc.Client, error) {
 
 // FindSuccessorRPC sends RPC call to remote node
 func (node *Node) FindSuccessorRPC(id []byte) (Node, error) {
+	DPrintf("rpc??")
 	client, err := node.openConn()
 	if err != nil {
 		checkError(err)
@@ -24,9 +25,10 @@ func (node *Node) FindSuccessorRPC(id []byte) (Node, error) {
 	}
 	defer client.Close()
 
-	args := FindSuccessorArgs{}
+	args := FindSuccessorArgs{id}
 	var reply FindSuccessorReply
 	err = client.Call("RPC.FindSuccessor", args, &reply)
+	DPrintf("hang... rpc...")
 	if err != nil {
 		checkError(err)
 		return Node{}, err
@@ -53,6 +55,25 @@ func (node *Node) GetSuccessorRPC() (Node, error) {
 	return reply.N, nil
 }
 
+// GetPredecessorRPC sends RPC call to remote node
+func (node *Node) GetPredecessorRPC() (Node, error) {
+	client, err := node.openConn()
+	if err != nil {
+		checkError(err)
+		return Node{}, err
+	}
+	defer client.Close()
+
+	args := GetPredecessorArgs{}
+	var reply GetPredecessorReply
+	err = client.Call("RPC.GetPredecessor", args, &reply)
+	if err != nil {
+		checkError(err)
+		return Node{}, err
+	}
+	return reply.N, nil
+}
+
 // FindClosestNodeRPC sends RPC call to remote node
 func (node *Node) FindClosestNodeRPC(id []byte) (Node, error) {
 	client, err := node.openConn()
@@ -64,13 +85,33 @@ func (node *Node) FindClosestNodeRPC(id []byte) (Node, error) {
 
 	args := FindClosestNodeArgs{}
 	var reply FindClosestNodeReply
-	args.ID = id
+	args.Id = id
 	err = client.Call("RPC.FindClosestNode", args, &reply)
 	if err != nil {
 		checkError(err)
 		return Node{}, err
 	}
 	return reply.N, nil
+}
+
+// NotifyRPC sends RPC call to remote node, x might be your predecessor
+func (node *Node) NotifyRPC(x Node) error {
+	client, err := node.openConn()
+	if err != nil {
+		checkError(err)
+		return err
+	}
+	defer client.Close()
+
+	args := NotifyArgs{}
+	args.N = x
+	var reply NotifyReply
+	err = client.Call("RPC.Notify", args, &reply)
+	if err != nil {
+		checkError(err)
+		return err
+	}
+	return err
 }
 
 // RemoteGetPred returns the predecessor of the specified node.

@@ -1,15 +1,21 @@
 package chord
 
 import (
-	"bytes"
 	"fmt"
+	"log"
 	"math/big"
 	"math/rand"
+	"sync"
+	"time"
 )
 
-// "fmt"
-// "bytes"
-// "math/big"
+const (
+	// DefaultStabilizeInterval is the interval that this server will start the stabilize process
+	DefaultStabilizeInterval = 1 * time.Second
+
+	// DefaultFixFingerInterval is the interval that this server will repeat fixing its finger table
+	DefaultFixFingerInterval = 1 * time.Second
+)
 
 // ChordServer is a single ChordServer
 type ChordServer struct {
@@ -17,6 +23,10 @@ type ChordServer struct {
 	fingerTable []Node // a table of FingerEntry pointer
 	predecessor Node   // previous node on the identifier circle
 	tracer      Tracer //tracer to trace node hops and latency
+	running     bool   // true if running, false if stopped
+	stopChan    chan bool
+	sync.RWMutex
+	routineGroup sync.WaitGroup
 }
 
 // MakeServer returns a pointer to a  server
@@ -25,86 +35,173 @@ func MakeServer(ip string) *ChordServer {
 	server.node = MakeNode(ip)
 	server.fingerTable = make([]Node, numBits)
 	server.tracer = MakeTracer()
+	server.running = false
+	DPrintf("Initialized ChordServer ----> ip: %v | id: %v", server.node.IP, server.node.ID)
 	return server
 }
 
+func (chord *ChordServer) Start() error {
+	if chord.Running() {
+		return fmt.Errorf("Start() failed: %v already running", chord.GetID())
+	}
+
+	chord.stopChan = make(chan bool)
+	chord.running = true
+
+	chord.routineGroup.Add(1)
+	go func() {
+		defer chord.routineGroup.Done()
+		for chord.Running() {
+			select {
+			case _, ok := <-chord.stopChan:
+				if !ok {
+					return
+				}
+			case <-time.NewTimer(DefaultStabilizeInterval).C:
+				err := chord.Stabilize()
+				if err != nil {
+					checkError(err)
+					log.Printf("Stabilize error")
+				}
+			}
+		}
+	}()
+
+	chord.routineGroup.Add(1)
+	go func() {
+		defer chord.routineGroup.Done()
+		for chord.Running() {
+			select {
+			case _, ok := <-chord.stopChan:
+				if !ok {
+					return
+				}
+			case <-time.NewTimer(DefaultStabilizeInterval).C:
+				chord.fixFingers()
+			}
+		}
+	}()
+
+	return nil
+}
+
+// SetRunning sets the running state of chord
+func (chord *ChordServer) SetRunning(running bool) {
+	chord.Lock()
+	defer chord.Unlock()
+	chord.running = running
+}
+
+func (chord *ChordServer) Running() bool {
+	chord.RLock()
+	defer chord.RUnlock()
+	return chord.running
+}
+
+// Lookup returns the ip of node that stores key id
+func (chord *ChordServer) Lookup(id []byte) string {
+	succ := chord.FindSuccessor(id)
+	return succ.IP
+}
+
+// FindSuccessor returns Node that's the successor of key id
 func (chord *ChordServer) FindSuccessor(id []byte) Node {
-	chord.tracer.startTracer(chord.GetID(), id)
+	// chord.tracer.startTracer(chord.GetID(), id)
 	pred := chord.FindPredecessor(id)
 	result, _ := pred.GetSuccessorRPC()
-	chord.tracer.endTracer(result.ID)
+	// chord.tracer.endTracer(result.ID)
 	return result
 }
 
+// FindPredecessor returns the Node that's preceding id
 func (chord *ChordServer) FindPredecessor(id []byte) Node {
 	closest := chord.FindClosestNode(id)
-	if idsEqual(closest.ID, chord.node.ID) {
+	if idsEqual(closest.ID, chord.GetID()) {
 		return closest
 	}
 
 	closestSucc, _ := closest.GetSuccessorRPC()
 
-	chord.tracer.traceNode(closest.ID)
-	// DPrintf("closestSucc: %d", closestSucc.ID)
+	// chord.tracer.traceNode(closest.ID)
 
 	for !betweenRightInclusive(id, closest.ID, closestSucc.ID) {
 		closest, _ = closest.FindClosestNodeRPC(id)
 		closestSucc, _ = closest.GetSuccessorRPC()
 
-		chord.tracer.traceNode(closest.ID)
-		// DPrintf("server %d, FindPredecessor, remote closest: %d", chord.node.ID, closest.ID)
+		// chord.tracer.traceNode(closest.ID)
 	}
-	// DPrintf("server %d, FindPredecessor, Predecessor is %d", chord.node.ID, closest.ID)
 	return closest
 }
 
+// FindClosestNode returns the closest node to id based on fingerTable
 func (chord *ChordServer) FindClosestNode(id []byte) Node {
-	// DPrintf("server id(%d) received local FindClosestNode call", chord.GetID())
+	chord.RLock()
+	defer chord.RUnlock()
+
 	fingerTable := chord.fingerTable
 	for i := numBits - 1; i >= 0; i-- {
-		if fingerTable[i].ID != nil && between(fingerTable[i].ID, chord.GetID(), id) {
-			// DPrintf("%v is between %v and %v", fingerTable[i].ID, chord.GetID(), id)
-			// DPrintf("server id(%d) local result is: "+fingerTable[i].String(), chord.GetID())
+		if fingerTable[i].ID != nil && between(fingerTable[i].ID, chord.node.ID, id) {
 			return fingerTable[i]
 		}
 	}
-
-	// DPrintf("server id(%d) local FindClosestNode result is: "+chord.node.String(), chord.GetID())
 	return chord.node
 }
 
-// GetNode returns ch's network information.
-func (chord *ChordServer) GetNode() Node {
-	return chord.node
+// Join adds chord to ring based on an existing node
+func (chord *ChordServer) Join(node Node) {
+	chord.Lock()
+	defer chord.Unlock()
+	if node.ID == nil { // the only node in the ring
+		chord.fingerTable[0] = chord.node
+		chord.predecessor = chord.node
+	} else {
+
+		DPrintf("Calling..")
+		chord.fingerTable[0], _ = node.FindSuccessorRPC(chord.node.ID)
+		chord.predecessor, _ = chord.fingerTable[0].GetPredecessorRPC()
+		DPrintf("Hangs..")
+	}
+
 }
 
-// GetID return's ch's identifier.
-func (chord *ChordServer) GetID() []byte {
-	return chord.node.ID
-}
+// Stabilize periodically verify's chord's immediate successor
+func (chord *ChordServer) Stabilize() error {
+	succ := chord.GetSuccessor()
+	x, _ := succ.GetPredecessorRPC()
 
-// node thinks it might be chord's predecessor.
-func (chord *ChordServer) Notify(node Node) error {
-	//TODO: lock here since it is changing chordServer property
-	// notify itself
-	if bytes.Equal(chord.node.ID, node.ID) {
-		return nil
+	if between(x.ID, chord.GetID(), succ.ID) {
+		chord.Lock()
+		chord.fingerTable[0] = x
+		chord.Unlock()
 	}
-	// node is the only node in the ring
-	if bytes.Equal(chord.node.ID, chord.predecessor.ID) {
-		chord.predecessor = node
-		chord.fingerTable[0] = node
-	} else if betweenRightInclusive(node.ID, chord.predecessor.ID, chord.node.ID) {
-		chord.predecessor = node
-	}
+
+	succ = chord.GetSuccessor()
+	DPrintf("%v notifies %v", chord.GetID(), succ.ID)
+	succ.NotifyRPC(chord.GetNode())
 	return nil
 }
 
-func (chord *ChordServer) fingerStart(i int) []byte {
-	currID := new(big.Int).SetBytes(chord.node.ID)
-	offset := new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(i)), nil)
-	start := new(big.Int).Add(currID, offset)
-	return start.Bytes()
+// Notify tells chord, node thinks it might be chord's predecessor.
+func (chord *ChordServer) Notify(node Node) error {
+	//TODO: lock here since it is changing chordServer property
+	chord.RLock()
+	if idsEqual(chord.node.ID, node.ID) {
+		chord.RUnlock()
+		return nil
+	}
+	chord.RUnlock()
+	chord.Lock()
+	defer chord.Unlock()
+
+	DPrintf("%v %v %v", node.ID, chord.predecessor.ID, chord.node.ID)
+	// node is the only node in the ring
+	if idsEqual(chord.node.ID, chord.predecessor.ID) {
+		chord.predecessor = node
+		chord.fingerTable[0] = node
+	} else if between(node.ID, chord.predecessor.ID, chord.node.ID) {
+		chord.predecessor = node
+	}
+	return nil
 }
 
 // periodically fresh finger table entries
@@ -114,129 +211,44 @@ func (chord *ChordServer) fixFingers() {
 	chord.fingerTable[i] = chord.FindSuccessor(fingerStart)
 }
 
-// // Join adds chordServer to the network
-// func (chordServer *ChordServer) Join(exisitingServer *ChordServer) {
-// 	if exisitingServer == nil { // the only node in the network
-// 		for _, entry := range chordServer.node.FingerTable() {
-// 			entry.id = chordServer.node.ID()
-// 			entry.ipAddr = chordServer.node.IP()
-// 		}
-// 		chordServer.node.predecessor = &Node{id: chordServer.node.ID(), ipAddr: chordServer.node.IP()}
-// 	} else { // update other nodes' fingers
-// 		chordServer.InitFingerTable(exisitingServer)
-// 		chordServer.UpdateOthers()
-// 	}
-// }
+func (chord *ChordServer) fingerStart(i int) []byte {
+	currID := new(big.Int).SetBytes(chord.node.ID)
+	offset := new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(i)), nil)
+	start := new(big.Int).Add(currID, offset)
+	return start.Bytes()
+}
 
-// func (chordServer *ChordServer) InitFingerTable(existingServer *ChordServer) {
-// 	DPrintf("Node%v: Start Initializing Finger Table...", chordServer.node.ID())
-// 	currNode := chordServer.node
-// 	fingerTable := currNode.FingerTable()
-// 	successor := existingServer.FindSuccessor(fingerTable[0].start)
-// 	successorServer := Servers[successor.ipAddr]
-// 	DPrintf("successor should be 0: %v\n", successorServer.node.ID())
-// 	// curr.prev = node.prev
-// 	currNode.predecessor = &Node{id: successorServer.node.predecessor.id, ipAddr: successorServer.node.predecessor.ipAddr}
-// 	currNode.SetSuccessor(&Node{id: successorServer.node.ID(), ipAddr: successorServer.node.IP()})
-// 	// node.prev = curr
-// 	//successorServer.node.predecessor = &Node{id: currNode.ID(), ipAddr: chordServer.node.ipAddr}
-// 	successorServer.node.SetPredecessor(currNode)
-// 	ChangeServer(currNode.Predecessor().IP()).node.SetSuccessor(currNode)
-// 	DPrintf("first finger is: id: %v  ip: %v", currNode.Successor().ID(), currNode.Successor().IP())
-// 	for i := 1; i < numBits; i++ {
-// 		DPrintf("initializing %vth finger", i)
-// 		if betweenLeftInclusive(fingerTable[i].start, currNode.ID(), fingerTable[i-1].id) {
-// 			DPrintf("%v should be between %v and %v\n",
-// 				fingerTable[i].start,
-// 				currNode.ID(),
-// 				fingerTable[i-1].id)
-// 			fingerTable[i].id = fingerTable[i-1].id
-// 			fingerTable[i].ipAddr = fingerTable[i-1].ipAddr
-// 		} else {
-// 			DPrintf("else, find successor based on fingerTable")
-// 			fartherNode := existingServer.FindSuccessor(fingerTable[i].start)
-// 			fingerTable[i].id = fartherNode.id
-// 			fingerTable[i].ipAddr = fartherNode.ipAddr
-// 		}
-// 	}
-// 	DPrintf("Done initializing:\n")
-// 	DPrintf(chordServer.node.String())
+// GetNode returns chord's network information.
+func (chord *ChordServer) GetNode() Node {
+	chord.RLock()
+	defer chord.RUnlock()
+	return chord.node
+}
 
-// }
+// GetID return's chord's identifier.
+func (chord *ChordServer) GetID() []byte {
+	chord.RLock()
+	defer chord.RUnlock()
+	return chord.node.ID
+}
 
-// // Update all nodes whose finger tables should refer to chordServer
-// func (chordServer *ChordServer) UpdateOthers() {
-// for i := 0; i < numBits; i++ {
-// 	// p = find_predecessor(n - 2^i)
-// 	DPrintf("n-2^i = %v", chordServer.nodeIdToUpdateFinger(i))
-// 	p := chordServer.FindPredecessor(chordServer.nodeIdToUpdateFinger(i))
-// 	DPrintf("predecessor: %v", p.ID())
+// GetIP return's chord's identifier.
+func (chord *ChordServer) GetIP() string {
+	chord.RLock()
+	defer chord.RUnlock()
+	return chord.node.IP
+}
 
-// 	if bytes.Compare(p.ID(), chordServer.node.ID()) == 0 {
-// 		DPrintf("reached new node itself")
-// 		return
-// 	}
-
-// 	if bytes.Compare(p.Successor().ID(), chordServer.nodeIdToUpdateFinger(i)) == 0 {
-// 		p = p.Successor()
-// 	}
-// 	pServer := ChangeServer(p.IP())
-// 	pServer.UpdateFingerTable(chordServer.node, i)
-// }
-// }
-
-// // Returns the id of node whose ith finger might be chordServer
-// func (chordServer *ChordServer) nodeIdToUpdateFinger(i int) []byte {
-// 	n := new(big.Int).SetBytes(chordServer.node.ID())
-// 	offset := new(big.Int).Exp(big.NewInt(2), big.NewInt(int64(i)), nil)
-// 	diff := new(big.Int).Sub(n, offset)
-// 	// diff.Add(diff, big.NewInt(1))
-
-// 	if diff.Sign() < 0 {
-// 		diff = diff.Add(diff, new(big.Int).Exp(big.NewInt(2), big.NewInt(numBits), nil))
-// 	}
-
-// 	if diff.Cmp(big.NewInt(0)) == 0 {
-// 		return []byte{0}
-// 	}
-
-// 	return diff.Bytes()
-// }
-
-// // Update chordServer's finger if s should be the ith finger
-// func (chordServer *ChordServer) UpdateFingerTable(s *Node, i int) {
-// 	if bytes.Compare(s.ID(), chordServer.node.ID()) == 0 {
-// 		DPrintf("reached new node itself")
-// 		return
-// 	}
-// 	DPrintf("update %v's finger", chordServer.node.id)
-// 	fingerTable := chordServer.node.fingerTable
-// 	if betweenLeftInclusive(s.ID(), chordServer.node.ID(), fingerTable[i].id) {
-// 		DPrintf("yes")
-// 		fingerTable[i].id = s.ID()
-// 		fingerTable[i].ipAddr = s.IP()
-// 		DPrintf("fingerTable: %v", chordServer.node.String())
-// 		p := chordServer.node.Predecessor()
-// 		pServer := ChangeServer(p.IP())
-// 		pServer.UpdateFingerTable(s, i)
-// 	}
-
-// }
-
-// // LookUp returns the ip addr of the successor node of id
-// func (chordServer *ChordServer) LookUp(id []byte) string {
-// 	ipAddr := chordServer.FindSuccessor(id).ipAddr
-// 	DPrintf("lookup result: " + ipAddr)
-// 	return ipAddr
-// }
-
-// // FindSuccessor returns the successor node of id
-// func (chordServer *ChordServer) FindSuccessor(id []byte) *Node {
-// 	predecessor := chordServer.FindPredecessor(id)
-// 	return Servers[predecessor.ipAddr].node.Successor()
-// }
+// GetSuccessor returns chord's successor
+func (chord *ChordServer) GetSuccessor() Node {
+	chord.RLock()
+	defer chord.RUnlock()
+	return chord.fingerTable[0]
+}
 
 func (chord *ChordServer) String(printFingerTable bool) string {
+	chord.RLock()
+	defer chord.RUnlock()
 	str := chord.node.String()
 	if !printFingerTable {
 		return str
@@ -251,5 +263,6 @@ func (chord *ChordServer) String(printFingerTable bool) string {
 		successor := chord.fingerTable[i].ID
 		str += fmt.Sprintf("%d   | %d     | %d\n", i, start, successor)
 	}
+	str += fmt.Sprintf("Predecessor: %v", chord.predecessor.ID)
 	return str
 }

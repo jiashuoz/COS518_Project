@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"testing"
+	"time"
 )
 
 func TestRunRPC(t *testing.T) {
@@ -27,6 +28,41 @@ func TestRunRPC(t *testing.T) {
 	fmt.Println(rpcServer3.getAddr())
 
 	// TODO: test RPC functionality
+}
+
+func TestStablize(t *testing.T) {
+	testAddrs := reverseHash(numBits, "127.0.0.1", 5000)
+	chord0 := MakeServer(testAddrs[0])
+	chord0.Join(Node{})
+	run(chord0)
+	chord0.Start()
+	fmt.Println(chord0.String(true))
+
+	<-time.After(2 * time.Second)
+	chord1 := MakeServer(testAddrs[1])
+	chord1.Join(chord0.GetNode())
+	run(chord1)
+	chord1.Start()
+
+	<-time.After(2 * time.Second)
+	chord3 := MakeServer(testAddrs[3])
+	chord3.Join(chord0.GetNode())
+	run(chord3)
+	chord3.Start()
+
+	<-time.After(2 * time.Second)
+	chord5 := MakeServer(testAddrs[5])
+	chord5.Join(chord0.GetNode())
+	run(chord5)
+	chord5.Start()
+
+	for {
+		fmt.Println(chord0.String(true))
+		fmt.Println(chord1.String(true))
+		fmt.Println(chord3.String(true))
+		fmt.Println(chord5.String(true))
+		<-time.After(10 * time.Second)
+	}
 }
 
 func TestGetSuccessor(t *testing.T) {

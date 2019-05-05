@@ -15,7 +15,6 @@ type Node struct {
 // MakeNode creates a new Node based on ip address and returns a pointer to it
 func MakeNode(ipAddr string) Node {
 	n := Node{ipAddr, hash(ipAddr)}
-	DPrintf("Initialized node ----> ip: %v | id: %v", n.IP, n.ID)
 	return n
 }
 
