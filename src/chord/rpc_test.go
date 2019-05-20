@@ -30,12 +30,38 @@ func TestRunRPC(t *testing.T) {
 	// TODO: test RPC functionality
 }
 
+func TestConcurrentStabilize(t *testing.T) {
+	testAddrs := reverseHash(numBits, "127.0.0.1", 5000)
+	go func() {
+		chord0 := MakeServer(testAddrs[0])
+		chord0.Join(Node{})
+		chord0.Start()
+		for {
+			<-time.After(5 * time.Second)
+			// fmt.Println(chord0.String(true))
+		}
+	}()
+
+	// go func() {
+	// 	chord1 := MakeServer(testAddrs[1])
+	// 	chord1.Join(MakeNode(testAddrs[0]))
+	// 	chord1.Start()
+	// 	for {
+	// 		<-time.After(5 * time.Second)
+	// 		fmt.Println(chord1.String(true))
+	// 	}
+	// }()
+
+	for {
+
+	}
+}
+
 func TestStablize(t *testing.T) {
 	testAddrs := reverseHash(numBits, "127.0.0.1", 5000)
 	chord0 := MakeServer(testAddrs[0])
 	chord0.Join(Node{})
 	chord0.Start()
-	fmt.Println(chord0.String(true))
 
 	// <-time.After(2 * time.Second)
 	chord1 := MakeServer(testAddrs[1])
@@ -44,12 +70,12 @@ func TestStablize(t *testing.T) {
 
 	// <-time.After(2 * time.Second)
 	chord3 := MakeServer(testAddrs[3])
-	chord3.Join(chord0.GetNode())
+	chord3.Join(chord1.GetNode())
 	chord3.Start()
 
 	// <-time.After(2 * time.Second)
 	chord5 := MakeServer(testAddrs[5])
-	chord5.Join(chord0.GetNode())
+	chord5.Join(chord1.GetNode())
 	chord5.Start()
 
 	for {

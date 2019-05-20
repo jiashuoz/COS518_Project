@@ -46,8 +46,9 @@ func rpcRun(chord *ChordServer) (*RPC, error) {
 		// rpcHandler.mu.Unlock()
 
 		// Blocks until completion
+		DPrintf("accepting.........")
 		rpcServer.rpcBase.Accept(rpcServer.listener)
-
+		DPrintf("err...............")
 		// rpcs.mu.Lock()
 		// rpcs.errChan <- nil
 		// rpcs.running = false
@@ -98,7 +99,7 @@ type GetSuccessorReply struct{ N Node }
 
 // GetSuccessor is an PRC call, returns the Successor of the Chord instance on this server.
 func (rpcServer *RPC) GetSuccessor(args GetSuccessorArgs, reply *GetSuccessorReply) error {
-	reply.N = rpcServer.chord.fingerTable[0]
+	reply.N = rpcServer.chord.GetSuccessor()
 	return nil
 }
 
@@ -110,7 +111,7 @@ type GetPredecessorReply struct{ N Node }
 
 // GetPredecessor is an PRC call, returns the Predecessor of the Chord instance on this server.
 func (rpcServer *RPC) GetPredecessor(args GetPredecessorArgs, reply *GetPredecessorReply) error {
-	reply.N = rpcServer.chord.predecessor
+	reply.N = rpcServer.chord.GetPredecessor()
 	return nil
 }
 

@@ -7,6 +7,11 @@ import (
 	"math/big"
 )
 
+func intEqualByte(x int, y []byte) bool {
+	xBytes := big.NewInt(int64(x)).Bytes()
+	return idsEqual(xBytes, y)
+}
+
 // add takes one number in bytes and second number in int64, return the result in bytes
 // does not work with negative numbers
 func addBytesInt64(numberInBytes []byte, addend int64) []byte {

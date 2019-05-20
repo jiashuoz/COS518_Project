@@ -4,22 +4,24 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"math/big"
+	"sync"
 )
 
 // Node is a primitive structure that contains information about a chord
 type Node struct {
 	IP string
 	ID []byte // use sha1 to generate 160 bit id (20 bytes)
+	mu *sync.RWMutex
 }
 
 // MakeNode creates a new Node based on ip address and returns a pointer to it
 func MakeNode(ipAddr string) Node {
-	n := Node{ipAddr, hash(ipAddr)}
+	n := Node{IP: ipAddr, ID: hash(ipAddr)}
 	return n
 }
 
 // String returns string representation of n.
-func (n *Node) String() string {
+func (n Node) String() string {
 	return fmt.Sprintf("Server IP: %s, ID: %d\n", n.IP, n.ID)
 }
 

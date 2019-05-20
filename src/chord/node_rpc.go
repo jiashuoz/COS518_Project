@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-func (node *Node) openConn() (*rpc.Client, error) {
+func (node Node) openConn() (*rpc.Client, error) {
 	conn, err := net.DialTimeout("tcp", node.IP, 5*time.Second)
 	if err != nil {
 		checkError(err)
@@ -16,8 +16,7 @@ func (node *Node) openConn() (*rpc.Client, error) {
 }
 
 // FindSuccessorRPC sends RPC call to remote node
-func (node *Node) FindSuccessorRPC(id []byte) (Node, error) {
-	DPrintf("rpc??")
+func (node Node) FindSuccessorRPC(id []byte) (Node, error) {
 	client, err := node.openConn()
 	if err != nil {
 		checkError(err)
@@ -28,7 +27,6 @@ func (node *Node) FindSuccessorRPC(id []byte) (Node, error) {
 	args := FindSuccessorArgs{id}
 	var reply FindSuccessorReply
 	err = client.Call("RPC.FindSuccessor", args, &reply)
-	DPrintf("hang... rpc...")
 	if err != nil {
 		checkError(err)
 		return Node{}, err
@@ -37,7 +35,7 @@ func (node *Node) FindSuccessorRPC(id []byte) (Node, error) {
 }
 
 // GetSuccessorRPC sends RPC call to remote node
-func (node *Node) GetSuccessorRPC() (Node, error) {
+func (node Node) GetSuccessorRPC() (Node, error) {
 	client, err := node.openConn()
 	if err != nil {
 		checkError(err)
@@ -56,7 +54,7 @@ func (node *Node) GetSuccessorRPC() (Node, error) {
 }
 
 // GetPredecessorRPC sends RPC call to remote node
-func (node *Node) GetPredecessorRPC() (Node, error) {
+func (node Node) GetPredecessorRPC() (Node, error) {
 	client, err := node.openConn()
 	if err != nil {
 		checkError(err)
@@ -75,7 +73,7 @@ func (node *Node) GetPredecessorRPC() (Node, error) {
 }
 
 // FindClosestNodeRPC sends RPC call to remote node
-func (node *Node) FindClosestNodeRPC(id []byte) (Node, error) {
+func (node Node) FindClosestNodeRPC(id []byte) (Node, error) {
 	client, err := node.openConn()
 	if err != nil {
 		checkError(err)
@@ -95,7 +93,7 @@ func (node *Node) FindClosestNodeRPC(id []byte) (Node, error) {
 }
 
 // NotifyRPC sends RPC call to remote node, x might be your predecessor
-func (node *Node) NotifyRPC(x Node) error {
+func (node Node) NotifyRPC(x Node) error {
 	client, err := node.openConn()
 	if err != nil {
 		checkError(err)
